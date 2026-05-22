@@ -2,6 +2,26 @@
 
 A local WordPress development dashboard served through Laravel Valet. Manage all your sites, tasks, and tooling from one place at **http://valet-site-manager.test**.
 
+## Demo
+
+![Demo](assets/preview/demo.gif)
+
+## Screenshots
+
+<p align="center">
+  <img src="assets/preview/dashboard-dark.png" width="32%">
+  <img src="assets/preview/dashboard-dark-list.png" width="32%">
+  <img src="assets/preview/dashboard-light.png" width="32%">
+  <img src="assets/preview/tasks-dark.png" width="32%">
+  <img src="assets/preview/tasks-light.png" width="32%">
+  <img src="assets/preview/settings-dark.png" width="32%">
+  <img src="assets/preview/settings-light.png" width="32%">
+  <img src="assets/preview/archive-dark.png" width="32%">
+  <img src="assets/preview/archive-light.png" width="32%">
+</p>
+
+
+
 ---
 
 ## Prerequisites
