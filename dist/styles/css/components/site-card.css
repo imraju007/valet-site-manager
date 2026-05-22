@@ -271,3 +271,7 @@ body.hide-btn-wpcli    .js-term[data-mode="wpcli"] { display: none }
 body.hide-btn-log      .js-debug-log               { display: none }
 body.hide-btn-debug    .js-debug-toggle            { display: none }
 body.hide-btn-clean    .js-clean-db                { display: none }
+
+/* ─── Archive button ────────────────────────────────────────────────────── */
+.sc-archived { opacity: 0.75 }
+.sc-archived .sc-accent { background: var(--bd2) }

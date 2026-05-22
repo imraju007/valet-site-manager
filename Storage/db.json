@@ -1,88 +1,7 @@
 {
-    "__tasks__": {
-        "divi5-development": [
-            {
-                "title": "New Module",
-                "status": "done",
-                "subtasks": [
-                    {
-                        "id": "o673xapycok",
-                        "title": "Sub Module",
-                        "status": "done"
-                    },
-                    {
-                        "id": "jguxcgrfsgj",
-                        "title": "Hello Ther",
-                        "description": null,
-                        "priority": "medium",
-                        "status": "done"
-                    },
-                    {
-                        "id": "buvtc10kfif",
-                        "title": "Hello 2",
-                        "description": "How Are you",
-                        "priority": "medium",
-                        "status": "done"
-                    }
-                ],
-                "id": "0ae082605076ac2f",
-                "created_at": "2026-05-21",
-                "description": "Hello There",
-                "priority": "medium",
-                "due_date": null
-            },
-            {
-                "title": "Hello Task 2",
-                "description": "I am Task to",
-                "status": "todo",
-                "priority": "medium",
-                "due_date": null,
-                "subtasks": [],
-                "id": "887aaaaabd11388b",
-                "created_at": "2026-05-21"
-            }
-        ],
-        "divi5-testing": [
-            {
-                "title": "tesk 1",
-                "description": "do this now",
-                "status": "todo",
-                "priority": "medium",
-                "due_date": null,
-                "subtasks": [
-                    {
-                        "id": "je3utvk5jxd",
-                        "title": "menu layout",
-                        "description": null,
-                        "priority": "medium",
-                        "status": "todo"
-                    }
-                ],
-                "id": "d045ec9bd2a6f2b4",
-                "created_at": "2026-05-21"
-            },
-            {
-                "title": "Advanced Heading",
-                "description": null,
-                "status": "done",
-                "priority": "medium",
-                "due_date": null,
-                "subtasks": [
-                    {
-                        "id": "jtzxwgybwoj",
-                        "title": "module.json",
-                        "description": null,
-                        "priority": "medium",
-                        "status": "done"
-                    }
-                ],
-                "id": "fce9f65a2fd94c84",
-                "created_at": "2026-05-21"
-            }
-        ]
-    },
+    "__tasks__": {},
     "__settings__": {
-        "appearence": {
+        "appearance": {
             "action_btn": [],
             "presets": [
                 {
@@ -128,25 +47,11 @@
             ]
         },
         "new_site_default": {
-            "plugins": [
-                "/Users/israfil/Downloads/divi-motion-v1.2.0.zip",
-                "/Users/israfil/Downloads/diviflash.zip"
-            ],
-            "themes": [
-                "/Users/israfil/Downloads/Divi.zip"
-            ],
-            "folder_structure": {
-                "dist": {
-                    "styles": {
-                        "css": [],
-                        "js": []
-                    },
-                    "assets": []
-                },
-                "index.php": null
-            },
-            "wp_parent_dir": "/Users/israfil/wordpress-dev",
-            "static_parent_dir": "/Users/israfil/Sites"
+            "plugins": [],
+            "themes": [],
+            "folder_structure": {},
+            "wp_parent_dir": "",
+            "static_parent_dir": ""
         },
         "db_config": {
             "host": "",
@@ -158,5 +63,6 @@
             "password": "",
             "email": ""
         }
-    }
+    },
+    "__archived__": []
 }

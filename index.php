@@ -6,6 +6,9 @@ $csrf    = Auth::csrfToken();
 $root    = realpath(__DIR__ . '/..');
 $entries = SiteScanner::allSites($root ?: '');
 $db      = new Database(DB_FILE);
+$archived         = $db->getArchived();
+$active_entries   = array_values(array_filter($entries, fn($e) => !in_array($e['name'], $archived)));
+$archived_entries = array_values(array_filter($entries, fn($e) =>  in_array($e['name'], $archived)));
 ?>
 <!doctype html>
 <html lang="en" data-theme="dark">
@@ -27,6 +30,7 @@ $db      = new Database(DB_FILE);
   <?php require_once __DIR__ . '/components/panel-sites.php'; ?>
   <?php require_once __DIR__ . '/components/panel-tasks.php'; ?>
   <?php require_once __DIR__ . '/components/panel-settings.php'; ?>
+  <?php require_once __DIR__ . '/components/panel-archive.php'; ?>
 </div>
 
 <?php require_once __DIR__ . '/components/terminal.php'; ?>
@@ -37,7 +41,7 @@ $db      = new Database(DB_FILE);
 <div id="toasts"></div>
 
 <script>
-const SITES = <?php echo json_encode($entries, JSON_HEX_TAG | JSON_HEX_AMP); ?>;
+const SITES = <?php echo json_encode($active_entries, JSON_HEX_TAG | JSON_HEX_AMP); ?>;
 const CSRF_TOKEN = <?php echo json_encode($csrf); ?>;
 </script>
 <script src="dist/styles/js/scripts.js"></script>

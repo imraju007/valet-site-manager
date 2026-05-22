@@ -175,3 +175,58 @@
     width: 15px;
     height: 15px
 }
+
+/* ─── More (3-dot) Menu ─────────────────────────────────────── */
+.hdr-more {
+    position: relative
+}
+
+.hdr-more-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 160px;
+    background: var(--sur3);
+    border: 1px solid var(--bd2);
+    border-radius: 10px;
+    padding: 6px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, .4);
+    z-index: 500;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-4px);
+    transition: opacity .15s, transform .15s
+}
+
+.hdr-more-menu.open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0)
+}
+
+.hdr-more-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--txt);
+    width: 100%;
+    cursor: pointer;
+    transition: all .1s
+}
+
+.hdr-more-item:hover {
+    background: var(--sur);
+    color: var(--txts)
+}
+
+.hdr-more-item.active {
+    color: var(--cyan);
+    background: var(--cyand)
+}
+
+.hdr-more-item .nav-count {
+    margin-left: auto
+}

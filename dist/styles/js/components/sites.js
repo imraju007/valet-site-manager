@@ -2,12 +2,21 @@
    TABS
 ═══════════════════════════════════════════════════════ */
 $$('.nav-btn[data-tab]').forEach(b => b.addEventListener('click', ()=> switchTab(b.dataset.tab)));
+$$('.hdr-more-item[data-tab]').forEach(b => b.addEventListener('click', ()=> { closeMoreMenu(); switchTab(b.dataset.tab); }));
+
+const _moreMenu = $('#hdr-more-menu');
+const _moreBtn  = $('.hdr-more-btn');
+function closeMoreMenu() { _moreMenu?.classList.remove('open'); }
+_moreBtn?.addEventListener('click', e => { e.stopPropagation(); _moreMenu?.classList.toggle('open'); });
+document.addEventListener('click', e => { if (!e.target.closest('.hdr-more')) closeMoreMenu(); });
 
 function switchTab(tab) {
   $$('.nav-btn[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab===tab));
+  $$('.hdr-more-item[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab===tab));
   $('#panel-sites').classList.toggle('hidden', tab!=='sites');
   $('#panel-tasks').classList.toggle('hidden', tab!=='tasks');
   $('#panel-settings').classList.toggle('hidden', tab!=='settings');
+  $('#panel-archive').classList.toggle('hidden', tab!=='archive');
   $('#search-wrap').style.display = tab==='sites' ? '' : 'none';
   if (tab==='tasks' && S.project) renderKanban();
   if (tab==='settings') loadSettingsDefaults();
@@ -449,3 +458,36 @@ document.addEventListener('click', e => {
   tip.classList.remove('visible');
   document.getElementById('cp-toggle-btn')?.classList.remove('open');
 }, true);
+
+/* ═══════════════════════════════════════════════════════
+   ARCHIVE / UNARCHIVE
+═══════════════════════════════════════════════════════ */
+document.addEventListener('click', async e => {
+  const btn = e.target.closest('.js-archive');
+  if (!btn) return;
+  const site = btn.dataset.site;
+  btn.disabled = true;
+  const r = await api('toggle_archive', { name: site, archive: true }, 'POST');
+  if (r.ok) {
+    toast(`${site} archived`);
+    setTimeout(() => location.reload(), 800);
+  } else {
+    toast(r.error || 'Archive failed', 'err');
+    btn.disabled = false;
+  }
+});
+
+document.addEventListener('click', async e => {
+  const btn = e.target.closest('.js-unarchive');
+  if (!btn) return;
+  const site = btn.dataset.site;
+  btn.disabled = true;
+  const r = await api('toggle_archive', { name: site, archive: false }, 'POST');
+  if (r.ok) {
+    toast(`${site} unarchived`);
+    setTimeout(() => location.reload(), 800);
+  } else {
+    toast(r.error || 'Unarchive failed', 'err');
+    btn.disabled = false;
+  }
+});

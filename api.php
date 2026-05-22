@@ -431,6 +431,16 @@ switch ($action) {
         ok(['path' => rtrim($out, "/\n")]);
     }
 
+    case 'toggle_archive': {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') fail('POST required');
+        $name    = trim($body['name']    ?? '');
+        $archive = (bool)($body['archive'] ?? true);
+        if ($name === '') fail('Missing name');
+        if ($archive) $db->archiveSite($name);
+        else          $db->unarchiveSite($name);
+        ok();
+    }
+
     default:
         fail('Unknown action', 404);
 }

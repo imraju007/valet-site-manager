@@ -8,7 +8,7 @@ declare(strict_types=1);
  *   {
  *     "__tasks__":    { "<site-slug>": [ {...task}, ... ] },
  *     "__settings__": {
- *       "appearence":       { "action_btn": {}, "presets": [] },
+ *       "appearance":       { "action_btn": {}, "presets": [] },
  *       "new_site_default": { "plugins": [], "themes": [], "folder_structure": {} },
  *       "db_config":        { "host": "", "user": "", "password": "" },
  *       "wp_admin_config":  { "user": "", "password": "", "email": "" }
@@ -60,7 +60,7 @@ class Database
     public static function defaultSettings(): array
     {
         return [
-            'appearence'       => ['action_btn' => [], 'presets' => []],
+            'appearance'       => ['action_btn' => [], 'presets' => []],
             'new_site_default' => ['plugins' => [], 'themes' => [], 'folder_structure' => (object)[], 'wp_parent_dir' => '', 'static_parent_dir' => ''],
             'db_config'        => ['host' => '', 'user' => '', 'password' => ''],
             'wp_admin_config'  => ['user' => '', 'password' => '', 'email' => ''],
@@ -184,12 +184,12 @@ class Database
     /**
      * Persist one settings section.
      *
-     * Allowed sections: new_site_default | wp_admin_config | db_config | appearence
+     * Allowed sections: new_site_default | wp_admin_config | db_config | appearance
      * Throws InvalidArgumentException for unknown sections.
      */
     public function saveSettings(string $section, array $data): void
     {
-        $allowed = ['new_site_default', 'wp_admin_config', 'db_config', 'appearence'];
+        $allowed = ['new_site_default', 'wp_admin_config', 'db_config', 'appearance'];
         if (!in_array($section, $allowed, true)) {
             throw new InvalidArgumentException("Unknown settings section: {$section}");
         }
@@ -201,7 +201,7 @@ class Database
             'new_site_default' => $this->saveNewSiteDefault($data),
             'wp_admin_config'  => $this->saveWpAdminConfig($data),
             'db_config'        => $this->saveDbConfig($data),
-            'appearence'       => $this->saveAppearence($data),
+            'appearance'       => $this->saveAppearance($data),
         };
 
         $this->write();
@@ -240,13 +240,36 @@ class Database
         ];
     }
 
-    private function saveAppearence(array $data): void
+    private function saveAppearance(array $data): void
     {
         if (array_key_exists('action_btn', $data)) {
-            $this->data['__settings__']['appearence']['action_btn'] = $data['action_btn'];
+            $this->data['__settings__']['appearance']['action_btn'] = $data['action_btn'];
         }
         if (isset($data['presets']) && is_array($data['presets'])) {
-            $this->data['__settings__']['appearence']['presets'] = $data['presets'];
+            $this->data['__settings__']['appearance']['presets'] = $data['presets'];
         }
+    }
+
+    public function getArchived(): array
+    {
+        return array_values($this->data()['__archived__'] ?? []);
+    }
+
+    public function archiveSite(string $name): void
+    {
+        $this->data();
+        $list = $this->data['__archived__'] ?? [];
+        if (!in_array($name, $list, true)) $list[] = $name;
+        $this->data['__archived__'] = array_values($list);
+        $this->write();
+    }
+
+    public function unarchiveSite(string $name): void
+    {
+        $this->data();
+        $this->data['__archived__'] = array_values(
+            array_filter($this->data['__archived__'] ?? [], fn($n) => $n !== $name)
+        );
+        $this->write();
     }
 }
