@@ -1,0 +1,273 @@
+/* ─── Sites Grid ───────────────────────────────────────────────────────── */
+.sites-grid {
+    display: block
+}
+
+.sites-grid .site-group {
+    display: grid;
+    gap: 12px;
+    grid-template-columns:repeat(auto-fill, minmax(360px, 1fr));
+    margin-bottom: 28px;
+}
+
+.sites-grid .site-group-hdr {
+    grid-column: 1/-1
+}
+
+.sites-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px
+}
+
+.sites-list .site-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 20px
+}
+
+.sites-list .site-group-hdr {
+    margin-bottom: 0
+}
+
+.site-hidden {
+    display: none !important
+}
+
+/* ─── Site Card ────────────────────────────────────────────────────────── */
+.sc {
+    background: var(--sur);
+    border: 1px solid var(--bd);
+    border-radius: var(--r);
+    position: relative;
+    /* no overflow:hidden — it clips absolutely-positioned dropdowns */
+    transition: border-color .2s, box-shadow .2s;
+    /* no transform:translateY — transforms create stacking contexts that trap child z-index */
+}
+
+.sc::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--r);
+    box-shadow: inset 0 0 0 1px transparent;
+    pointer-events: none;
+    transition: box-shadow .2s;
+}
+
+.sc:hover {
+    border-color: var(--bdg);
+    box-shadow: 0 4px 24px rgba(0, 210, 255, .08), 0 0 0 1px rgba(0, 210, 255, .12);
+}
+
+.sc:hover::after {
+    box-shadow: inset 0 0 0 1px rgba(0, 210, 255, .12)
+}
+
+.sc-accent {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, var(--cyan), var(--vio));
+    border-radius: var(--r) 0 0 var(--r);
+    opacity: 0;
+    transition: opacity .2s;
+}
+
+.sc:hover .sc-accent {
+    opacity: 1
+}
+
+/* Card header */
+.sc-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px 10px;
+}
+
+.sc-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: var(--grn);
+    box-shadow: 0 0 7px var(--grn);
+    animation: pulse-dot 2.5s ease infinite;
+}
+
+@keyframes pulse-dot {
+    0%, 100% {
+        opacity: 1;
+        box-shadow: 0 0 7px var(--grn)
+    }
+    50% {
+        opacity: .5;
+        box-shadow: 0 0 3px var(--grn)
+    }
+}
+
+.sc-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--txtb);
+    letter-spacing: -.01em;
+    flex: 1;
+}
+
+.sc-url {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--cyan);
+    opacity: .6;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sc-path {
+    padding: 0 16px 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--txtm);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    direction: rtl;
+    text-align: left;
+}
+
+/* Card actions */
+.sc-actions {
+    padding: 4px 12px 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+}
+
+.sc-sep {
+    width: 1px;
+    height: 18px;
+    background: var(--bd);
+    margin: 0 2px;
+    flex-shrink: 0
+}
+
+/* ─── Site Type Badge ───────────────────────────────────────────────────── */
+.sc-type-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 7px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    flex-shrink: 0
+}
+
+.sc-type-wordpress {
+    background: rgba(33, 117, 220, .15);
+    color: #4a9eff;
+    border: 1px solid rgba(33, 117, 220, .25)
+}
+
+.sc-type-static {
+    background: var(--grnd);
+    color: var(--grn);
+    border: 1px solid rgba(52, 211, 153, .25)
+}
+
+/* ─── Site Type Tabs ────────────────────────────────────────────────────── */
+.type-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--bd);
+    flex-shrink: 0;
+}
+
+.type-tab {
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--txt);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color .15s, border-color .15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.type-tab:hover {
+    color: var(--txts)
+}
+
+.type-tab.active {
+    color: var(--cyan);
+    border-bottom-color: var(--cyan)
+}
+
+.type-tab-ct {
+    font-size: 10px;
+    background: var(--sur3);
+    border: 1px solid var(--bd);
+    border-radius: 10px;
+    padding: 1px 7px;
+    color: var(--txtm);
+    font-weight: 500;
+}
+
+.type-tab.active .type-tab-ct {
+    background: var(--cyand);
+    border-color: var(--bdg);
+    color: var(--cyan);
+}
+
+/* ─── Site Groups ───────────────────────────────────────────────────────── */
+.site-group {
+}
+
+.site-group-hdr {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--bd)
+}
+
+.site-group-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--txt)
+}
+
+.site-group-count {
+    font-size: 10px;
+    background: var(--sur3);
+    border: 1px solid var(--bd);
+    border-radius: 10px;
+    padding: 1px 7px;
+    color: var(--txtm)
+}
+
+/* ─── Button Visibility (toggled via body classes) ──────────────────────── */
+body.hide-btn-open     .open-wrap                  { display: none }
+body.hide-btn-ide      .js-ide                     { display: none }
+body.hide-btn-finder   .js-finder                  { display: none }
+body.hide-btn-tasks    .js-site-tasks              { display: none }
+body.hide-btn-delete   .js-site-delete             { display: none }
+body.hide-btn-admin    .sc-actions a.btn-g         { display: none }
+body.hide-btn-terminal .js-term[data-mode="bash"]  { display: none }
+body.hide-btn-wpcli    .js-term[data-mode="wpcli"] { display: none }
+body.hide-btn-log      .js-debug-log               { display: none }
+body.hide-btn-debug    .js-debug-toggle            { display: none }
+body.hide-btn-clean    .js-clean-db                { display: none }

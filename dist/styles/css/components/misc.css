@@ -1,0 +1,130 @@
+/* ─── Toast ─────────────────────────────────────────────────────────────── */
+#toasts {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 999999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+}
+
+.toast {
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, .4);
+    border: 1px solid;
+    animation: t-in .18s ease;
+    pointer-events: auto;
+    max-width: 300px;
+}
+
+.toast-ok {
+    background: var(--sur3);
+    border-color: var(--bd2);
+    color: var(--txts)
+}
+
+.toast-err {
+    background: var(--redd);
+    border-color: var(--red);
+    color: var(--red)
+}
+
+.toast-ok::before {
+    content: '✓ ';
+    color: var(--grn)
+}
+
+.toast-err::before {
+    content: '✕ '
+}
+
+@keyframes t-in {
+    from {
+        opacity: 0;
+        transform: translateX(12px)
+    }
+    to {
+        opacity: 1;
+        transform: none
+    }
+}
+
+/* ─── Spinner ───────────────────────────────────────────────────────────── */
+.spin {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border: 1.5px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spinning .6s linear infinite;
+}
+
+@keyframes spinning {
+    to {
+        transform: rotate(360deg)
+    }
+}
+
+/* ─── Scrollbar (global) ────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+    width: 5px;
+    height: 5px
+}
+
+::-webkit-scrollbar-track {
+    background: transparent
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--bd2);
+    border-radius: 3px
+}
+
+/* ─── Responsive ────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+    .kanban {
+        grid-template-columns:1fr;
+    }
+
+    .sites-grid {
+        grid-template-columns:1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .hdr {
+        padding: 0 14px;
+        gap: 10px
+    }
+
+    .hdr-search {
+        max-width: 160px;
+    }
+
+    .panel {
+        padding: 14px;
+    }
+
+    .sc-url {
+        display: none;
+    }
+
+    body.tp-open .panel:not(.hidden) {
+        padding-right: 14px;
+    }
+
+    .tp {
+        width: 100%;
+        border-left: none;
+    }
+
+    :root {
+        --tp: 100%;
+    }
+}

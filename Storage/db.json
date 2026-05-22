@@ -1,0 +1,162 @@
+{
+    "__tasks__": {
+        "divi5-development": [
+            {
+                "title": "New Module",
+                "status": "done",
+                "subtasks": [
+                    {
+                        "id": "o673xapycok",
+                        "title": "Sub Module",
+                        "status": "done"
+                    },
+                    {
+                        "id": "jguxcgrfsgj",
+                        "title": "Hello Ther",
+                        "description": null,
+                        "priority": "medium",
+                        "status": "done"
+                    },
+                    {
+                        "id": "buvtc10kfif",
+                        "title": "Hello 2",
+                        "description": "How Are you",
+                        "priority": "medium",
+                        "status": "done"
+                    }
+                ],
+                "id": "0ae082605076ac2f",
+                "created_at": "2026-05-21",
+                "description": "Hello There",
+                "priority": "medium",
+                "due_date": null
+            },
+            {
+                "title": "Hello Task 2",
+                "description": "I am Task to",
+                "status": "todo",
+                "priority": "medium",
+                "due_date": null,
+                "subtasks": [],
+                "id": "887aaaaabd11388b",
+                "created_at": "2026-05-21"
+            }
+        ],
+        "divi5-testing": [
+            {
+                "title": "tesk 1",
+                "description": "do this now",
+                "status": "todo",
+                "priority": "medium",
+                "due_date": null,
+                "subtasks": [
+                    {
+                        "id": "je3utvk5jxd",
+                        "title": "menu layout",
+                        "description": null,
+                        "priority": "medium",
+                        "status": "todo"
+                    }
+                ],
+                "id": "d045ec9bd2a6f2b4",
+                "created_at": "2026-05-21"
+            },
+            {
+                "title": "Advanced Heading",
+                "description": null,
+                "status": "done",
+                "priority": "medium",
+                "due_date": null,
+                "subtasks": [
+                    {
+                        "id": "jtzxwgybwoj",
+                        "title": "module.json",
+                        "description": null,
+                        "priority": "medium",
+                        "status": "done"
+                    }
+                ],
+                "id": "fce9f65a2fd94c84",
+                "created_at": "2026-05-21"
+            }
+        ]
+    },
+    "__settings__": {
+        "appearence": {
+            "action_btn": [],
+            "presets": [
+                {
+                    "name": "cyber",
+                    "--cyan": "#00d2ff",
+                    "--cyan2": "#0099bb",
+                    "--vio": "#a78bfa",
+                    "--grn": "#34d399",
+                    "--amb": "#fbbf24"
+                },
+                {
+                    "name": "emerald",
+                    "--cyan": "#10b981",
+                    "--cyan2": "#059669",
+                    "--vio": "#6366f1",
+                    "--grn": "#34d399",
+                    "--amb": "#f59e0b"
+                },
+                {
+                    "name": "purple",
+                    "--cyan": "#a78bfa",
+                    "--cyan2": "#7c3aed",
+                    "--vio": "#ec4899",
+                    "--grn": "#34d399",
+                    "--amb": "#fbbf24"
+                },
+                {
+                    "name": "amber",
+                    "--cyan": "#f59e0b",
+                    "--cyan2": "#d97706",
+                    "--vio": "#a78bfa",
+                    "--grn": "#34d399",
+                    "--amb": "#ef4444"
+                },
+                {
+                    "name": "rose",
+                    "--cyan": "#f43f5e",
+                    "--cyan2": "#e11d48",
+                    "--vio": "#8b5cf6",
+                    "--grn": "#10b981",
+                    "--amb": "#f59e0b"
+                }
+            ]
+        },
+        "new_site_default": {
+            "plugins": [
+                "/Users/israfil/Downloads/divi-motion-v1.2.0.zip",
+                "/Users/israfil/Downloads/diviflash.zip"
+            ],
+            "themes": [
+                "/Users/israfil/Downloads/Divi.zip"
+            ],
+            "folder_structure": {
+                "dist": {
+                    "styles": {
+                        "css": [],
+                        "js": []
+                    },
+                    "assets": []
+                },
+                "index.php": null
+            },
+            "wp_parent_dir": "/Users/israfil/wordpress-dev",
+            "static_parent_dir": "/Users/israfil/Sites"
+        },
+        "db_config": {
+            "host": "",
+            "user": "",
+            "password": ""
+        },
+        "wp_admin_config": {
+            "user": "",
+            "password": "",
+            "email": ""
+        }
+    }
+}

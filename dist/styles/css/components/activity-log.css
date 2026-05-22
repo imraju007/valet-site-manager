@@ -1,0 +1,221 @@
+/* ─── Activity Log Panel ────────────────────────────────────────────────── */
+.act-log {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 99999;
+    background: var(--sur);
+    border-top: 1px solid var(--bd);
+    display: flex;
+    flex-direction: column;
+    height: 260px;
+    transform: translateY(calc(100% - 37px));
+    transition: transform .25s ease;
+}
+.act-log.open { transform: translateY(0) }
+body.tp-open .act-log { right: var(--tp) }
+body.al-open .panel:not(.hidden) { padding-bottom: 260px }
+
+.act-log-hdr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px;
+    height: 37px;
+    cursor: pointer;
+    flex-shrink: 0;
+    user-select: none;
+    border-bottom: 1px solid transparent;
+}
+.act-log.open .act-log-hdr { border-bottom-color: var(--bd) }
+.act-log-hdr-l { display: flex; align-items: center; gap: 8px }
+.act-log-hdr-r { display: flex; align-items: center; gap: 2px }
+
+.act-log-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--txtm);
+    flex-shrink: 0;
+    transition: background .2s, box-shadow .2s;
+}
+.act-log-dot.running {
+    background: var(--cyan);
+    box-shadow: 0 0 6px var(--cyan);
+    animation: pulse-dot 1.2s ease infinite;
+}
+.act-log-dot.ok  { background: var(--grn) }
+.act-log-dot.err { background: var(--red) }
+
+.act-log-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--txt);
+}
+.act-log-btn {
+    font-size: 11px;
+    color: var(--txtm);
+    padding: 3px 8px;
+    border-radius: 4px;
+    transition: color .15s, background .15s;
+    display: inline-flex;
+    align-items: center;
+}
+.act-log-btn:hover { color: var(--txts); background: var(--sur2) }
+.act-log-chev svg { transition: transform .25s }
+.act-log.open .act-log-chev svg { transform: rotate(180deg) }
+
+.act-log-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+    font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+    font-size: 11px;
+    background: #080c14;
+}
+
+/* ── Action group ── */
+.al-group {
+    border-bottom: 1px solid #141c2e;
+}
+.al-group-hdr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 12px 6px;
+    background: #0c1220;
+    border-bottom: 1px solid #141c2e;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+.al-group-title {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--cyan);
+}
+.al-time {
+    font-size: 10px;
+    color: #2d3e5e;
+    font-weight: 400;
+}
+
+/* ── Terminal steps ── */
+.al-steps {
+    padding: 6px 0 8px;
+}
+.al-step {
+    padding: 2px 12px;
+    animation: al-fadein .12s ease;
+}
+@keyframes al-fadein {
+    from { opacity: 0; transform: translateY(3px) }
+    to   { opacity: 1; transform: translateY(0) }
+}
+.al-cmd-line {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    line-height: 1.5;
+}
+.al-status-ic {
+    width: 12px;
+    font-size: 10px;
+    flex-shrink: 0;
+    text-align: center;
+}
+.al-step.ok  .al-status-ic { color: var(--grn) }
+.al-step.err .al-status-ic { color: var(--red) }
+.al-prompt {
+    color: #2d4a7a;
+    user-select: none;
+    flex-shrink: 0;
+}
+.al-cmd {
+    color: #c8d6f0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+}
+.al-step.err .al-cmd { color: #e07070 }
+.al-out {
+    margin: 1px 0 3px 30px;
+    color: #4a5a7a;
+    white-space: pre-wrap;
+    word-break: break-all;
+    line-height: 1.55;
+    font-size: 10.5px;
+}
+.al-step.err .al-out { color: #a04040 }
+
+/* ── Sudo password prompt ── */
+.al-sudo-prompt {
+    margin: 6px 12px 8px;
+    background: #0d1526;
+    border: 1px solid #1e3058;
+    border-radius: 7px;
+    padding: 10px 12px;
+    animation: al-fadein .15s ease;
+}
+.al-sudo-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11px;
+    color: #7ca4d4;
+    margin-bottom: 8px;
+}
+.al-sudo-icon { font-size: 13px; flex-shrink: 0; }
+.al-sudo-fields {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+.al-sudo-input {
+    flex: 1;
+    background: #060a10;
+    border: 1px solid #1e3058;
+    border-radius: 5px;
+    padding: 5px 9px;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    color: #c8d6f0;
+    outline: none;
+    transition: border-color .15s;
+}
+.al-sudo-input:focus { border-color: var(--cyan) }
+.al-sudo-input::placeholder { color: #2d4a7a }
+.al-sudo-btn {
+    white-space: nowrap;
+    background: var(--cyan);
+    color: #000;
+    border-radius: 5px;
+    padding: 5px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    transition: opacity .15s;
+}
+.al-sudo-btn:hover { opacity: .85 }
+
+/* ── Pending / cursor ── */
+.al-pending {
+    padding: 7px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #2d4a7a;
+}
+.al-cursor {
+    color: var(--cyan);
+    animation: al-blink .75s step-end infinite;
+}
+@keyframes al-blink {
+    0%, 100% { opacity: 1 }
+    50%       { opacity: 0 }
+}

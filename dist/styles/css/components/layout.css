@@ -1,0 +1,20 @@
+/* ─── App Body ─────────────────────────────────────────────────────────── */
+.app {
+    margin-top: var(--hh);
+    min-height: calc(100vh - var(--hh));
+    position: relative;
+    z-index: 1;
+}
+
+.panel {
+    padding: 24px;
+    transition: padding-right .25s ease
+}
+
+.panel.hidden {
+    display: none
+}
+
+body.tp-open .panel:not(.hidden) {
+    padding-right: calc(var(--tp) + 24px)
+}

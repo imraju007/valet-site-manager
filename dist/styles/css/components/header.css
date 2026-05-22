@@ -1,0 +1,177 @@
+/* ─── Header ───────────────────────────────────────────────────────────── */
+.hdr {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--hh);
+    z-index: 900;
+    background: rgba(5, 7, 15, .88);
+    border-bottom: 1px solid var(--bd);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 20px;
+}
+
+[data-theme="light"] .hdr {
+    background: rgba(255, 255, 255, .92)
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--txtb);
+    flex-shrink: 0;
+    letter-spacing: -.01em;
+}
+
+.logo-mark {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    background: linear-gradient(135deg, var(--cyan), var(--vio));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 800;
+    color: #000;
+    flex-shrink: 0;
+    box-shadow: 0 0 16px rgba(0, 210, 255, .35);
+}
+
+.hdr-nav {
+    display: flex;
+    gap: 2px
+}
+
+.nav-btn {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--txt);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all .15s;
+    border: 1px solid transparent;
+}
+
+.nav-btn:hover {
+    color: var(--txts);
+    background: var(--cyand)
+}
+
+.nav-btn.active {
+    color: var(--cyan);
+    background: var(--cyand);
+    border-color: rgba(0, 210, 255, .2);
+}
+
+.nav-btn svg {
+    width: 14px;
+    height: 14px
+}
+
+.nav-count {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 8px;
+    background: var(--sur3);
+    color: var(--txt);
+}
+
+.nav-btn.active .nav-count {
+    background: var(--cyand);
+    color: var(--cyan)
+}
+
+/* Toolbar search (replaces header search) */
+.tb-search {
+    position: relative;
+    flex-shrink: 0
+}
+
+.tb-search input {
+    padding: 5px 10px 5px 30px;
+    width: 200px;
+    border: 1px solid var(--bd);
+    border-radius: 7px;
+    background: var(--sur2);
+    color: var(--txts);
+    font-size: 12px;
+    transition: all .15s;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+}
+
+.tb-search input::placeholder {
+    color: var(--txtm)
+}
+
+.tb-search input:focus {
+    outline: none;
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 3px var(--cyand);
+    background: var(--sur);
+    width: 240px;
+}
+
+.tb-search-ic {
+    position: absolute;
+    left: 9px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--txt);
+    pointer-events: none;
+}
+
+.tb-search-ic svg {
+    width: 12px;
+    height: 12px
+}
+
+.hdr-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px
+}
+
+/* ─── Icon Buttons ─────────────────────────────────────────────────────── */
+.icb {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 7px;
+    border: 1px solid transparent;
+    color: var(--txt);
+    transition: all .15s;
+    flex-shrink: 0;
+}
+
+.icb:hover {
+    background: var(--sur3);
+    color: var(--txts);
+    border-color: var(--bd);
+}
+
+.icb.active {
+    background: var(--cyand);
+    color: var(--cyan);
+    border-color: rgba(0, 210, 255, .2)
+}
+
+.icb svg {
+    width: 15px;
+    height: 15px
+}

@@ -1,0 +1,56 @@
+/* ─── Variables ────────────────────────────────────────────────────────── */
+:root {
+    --bg: #05070f;
+    --sur: #090d1a;
+    --sur2: #0d1220;
+    --sur3: #111827;
+    --bd: rgba(56, 100, 200, .14);
+    --bd2: rgba(56, 100, 200, .28);
+    --bdg: rgba(0, 210, 255, .35);
+    --txt: #5a6a8a;
+    --txts: #c8d6f0;
+    --txtb: #e8f0ff;
+    --txtm: #2e3d55;
+    --cyan: #00d2ff;
+    --cyan2: #0099bb;
+    --cyand: rgba(0, 210, 255, .1);
+    --cyandh: rgba(0, 210, 255, .18);
+    --vio: #a78bfa;
+    --viod: rgba(167, 139, 250, .12);
+    --grn: #34d399;
+    --grnd: rgba(52, 211, 153, .1);
+    --amb: #fbbf24;
+    --ambd: rgba(251, 191, 36, .1);
+    --red: #f87171;
+    --redd: rgba(248, 113, 113, .1);
+    --r: 8px;
+    --hh: 56px;
+    --tp: 480px;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+}
+
+[data-theme="light"] {
+    --bg: #f0f4ff;
+    --sur: #ffffff;
+    --sur2: #f5f8ff;
+    --sur3: #eef2ff;
+    --bd: rgba(99, 102, 241, .12);
+    --bd2: rgba(99, 102, 241, .28);
+    --bdg: rgba(79, 70, 229, .4);
+    --txt: #6b7280;
+    --txts: #1f2937;
+    --txtb: #111827;
+    --txtm: #9ca3af;
+    --cyan: #4f46e5;
+    --cyan2: #4338ca;
+    --cyand: rgba(79, 70, 229, .08);
+    --cyandh: rgba(79, 70, 229, .14);
+    --vio: #7c3aed;
+    --viod: rgba(124, 58, 237, .1);
+    --grn: #059669;
+    --grnd: rgba(5, 150, 105, .1);
+    --amb: #d97706;
+    --ambd: rgba(217, 119, 6, .1);
+    --red: #dc2626;
+    --redd: rgba(220, 38, 38, .1);
+}

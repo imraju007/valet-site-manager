@@ -1,0 +1,76 @@
+/* ─── Form Fields ────────────────────────────────────────────────────────── */
+.fgrp {
+    margin-bottom: 16px;
+}
+.fgrp:last-child { margin-bottom: 0 }
+
+.fld-clr {
+    position: absolute;
+    top: -19px;
+
+    display: none;
+    width: auto;
+    height: 16px;
+    padding: 2px 5px;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    /*background: var(--sur3);*/
+    /*border: 1px solid var(--bd2);*/
+    border-radius: 5px;
+    color: var(--txtm);
+    font-size: 11px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+}
+.fld-clr.show { display: flex; }
+.fld-clr:hover {
+    color: var(--txts);
+    background: var(--sur2);
+}
+
+.fld-clr[data-clr="cs-name"]{
+    right: 43px;
+}.fld-clr[data-clr="cs-dir"]{
+    right: 43px;
+}.fld-clr[data-clr="cs-plugins"]{
+    right: 8px;
+}.fld-clr[data-clr="cs-themes"]{
+    right: 8px;
+}.fld-clr[data-clr="cs-tree"]{
+    right: 8px;
+}.fld-clr[data-clr="cs-name"]{
+    right: 8px;
+}
+
+.flabel {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--txt);
+    margin-bottom: 5px;
+}
+
+.finput, .fselect {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--bd);
+    border-radius: 7px;
+    background: var(--sur2);
+    color: var(--txts);
+    font-size: 13px;
+    transition: all .15s;
+}
+
+.finput:focus, .fselect:focus {
+    outline: none;
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 3px var(--cyand);
+}
+
+.finput::placeholder {
+    color: var(--txtm)
+}
