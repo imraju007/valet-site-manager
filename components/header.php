@@ -2,7 +2,10 @@
 <header class="hdr">
   <div class="logo">
     <div class="logo-mark">S</div>
-    VALET SITE MANAGER
+    <div class="logo-text">
+      <span class="logo-title">VALET SITE MANAGER</span>
+      <span class="logo-sub">by <a href="https://github.com/imraju007/valet-site-manager" target="_blank" rel="noreferrer" class="logo-sub-link">imraju007</a></span>
+    </div>
   </div>
 
   <nav class="hdr-nav">

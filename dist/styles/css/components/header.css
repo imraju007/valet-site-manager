@@ -31,6 +31,39 @@
     letter-spacing: -.01em;
 }
 
+.logo-text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px
+}
+
+.logo-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--txtb);
+    letter-spacing: -.01em;
+    line-height: 1
+}
+
+.logo-sub {
+    font-size: 9px;
+    font-weight: 500;
+    color: var(--txtm);
+    letter-spacing: .03em;
+    line-height: 1
+}
+
+.logo-sub-link {
+    color: var(--cyan);
+    text-decoration: none;
+    opacity: .8;
+    transition: opacity .15s
+}
+
+.logo-sub-link:hover {
+    opacity: 1
+}
+
 .logo-mark {
     width: 28px;
     height: 28px;
