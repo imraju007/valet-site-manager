@@ -3,66 +3,26 @@ declare(strict_types=1);
 
 class SiteScanner
 {
+    private static Platform $platform;
+
+    /** Must be called once from app.php after the platform is instantiated */
+    public static function init(Platform $p): void
+    {
+        self::$platform = $p;
+    }
+
     public static function detectInstalledApps(): array
     {
-        $home = getenv('HOME') ?: '';
-
-        // Scan every .app in standard install locations into a fast lookup table
-        $appDirs = array_filter(['/Applications', $home ? "{$home}/Applications" : ''], 'is_dir');
-        $found   = [];
-        foreach ($appDirs as $dir) {
-            foreach (glob("{$dir}/*.app") ?: [] as $p) {
-                $found[basename($p)] = true;
-            }
-        }
-
-        // Browsers — matched by canonical .app bundle name
-        $browserDefs = [
-            'chrome'  => 'Google Chrome.app',
-            'firefox' => 'Firefox.app',
-            'safari'  => 'Safari.app',
-            'arc'     => 'Arc.app',
-            'brave'   => 'Brave Browser.app',
+        return [
+            'browsers' => self::$platform->detectBrowsers(),
+            'ides'     => self::$platform->detectIDEs(),
         ];
-
-        // IDEs — .app bundle name + fallback CLI binary paths
-        $ideDefs = [
-            'phpstorm' => [
-                'app' => 'PhpStorm.app',
-                'cli' => [],
-            ],
-            'vscode' => [
-                'app' => 'Visual Studio Code.app',
-                'cli' => ['/usr/local/bin/code', '/opt/homebrew/bin/code'],
-            ],
-            'cursor' => [
-                'app' => 'Cursor.app',
-                'cli' => ['/usr/local/bin/cursor', '/opt/homebrew/bin/cursor'],
-            ],
-        ];
-
-        $browsers = [];
-        foreach ($browserDefs as $key => $appName) {
-            if (isset($found[$appName])) $browsers[] = $key;
-        }
-
-        $ides = [];
-        foreach ($ideDefs as $key => $def) {
-            if (isset($found[$def['app']])) { $ides[] = $key; continue; }
-            foreach ($def['cli'] as $bin) {
-                if (file_exists($bin)) { $ides[] = $key; break; }
-            }
-        }
-
-        return ['browsers' => $browsers, 'ides' => $ides];
     }
 
     public static function valetSites(): array
     {
-        $home = getenv('HOME') ?: '';
-        if (!$home) return [];
         $results = [];
-        foreach ([$home . '/.config/valet/Sites', $home . '/.valet/Sites'] as $dir) {
+        foreach (self::$platform->sitesDirs() as $dir) {
             if (!is_dir($dir)) continue;
             foreach (scandir($dir) as $name) {
                 if ($name === '.' || $name === '..') continue;
@@ -92,7 +52,7 @@ class SiteScanner
 
     public static function detectType(string $path): ?string
     {
-        if (file_exists($path . '/wp-config.php')) return 'wordpress';
+        if (file_exists($path . '/wp-config.php'))                              return 'wordpress';
         if (file_exists($path . '/index.php') || file_exists($path . '/index.html')) return 'static';
         return null;
     }
@@ -101,7 +61,7 @@ class SiteScanner
     {
         $entries = [];
 
-        if ($root !== false) {
+        if ($root !== '') {
             $dirs = array_filter(scandir($root) ?: [], static function ($item) use ($root) {
                 if (in_array($item, ['.', '..', basename(APP_DIR)], true)) return false;
                 return is_dir($root . DIRECTORY_SEPARATOR . $item);
@@ -129,10 +89,10 @@ class SiteScanner
 
     private static function buildEntry(string $name, string $path, string $type, bool $linked): array
     {
-        $home    = getenv('HOME') ?: '';
-        $ssl     = $home !== '' && file_exists($home . '/.config/valet/Certificates/' . $name . '.test.crt');
-        $logFile = $type === 'wordpress' ? $path . '/wp-content/debug.log' : '';
-        $logSize = ($logFile !== '' && file_exists($logFile)) ? (int)filesize($logFile) : 0;
+        $certsDir = self::$platform->certsDir();
+        $ssl      = $certsDir !== '' && file_exists($certsDir . DIRECTORY_SEPARATOR . $name . '.test.crt');
+        $logFile  = $type === 'wordpress' ? $path . '/wp-content/debug.log' : '';
+        $logSize  = ($logFile !== '' && file_exists($logFile)) ? (int)filesize($logFile) : 0;
 
         return [
             'name'     => $name,
@@ -150,26 +110,27 @@ class SiteScanner
     }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// WpExecutor — macOS sudo-aware command runner (used by MacosPlatform::exec)
+// ─────────────────────────────────────────────────────────────────────────────
+
 class WpExecutor
 {
     /**
-     * Execute a shell command.
+     * Execute a shell command on macOS.
      *
-     * Pass $sudoPass when the command (or a subprocess it spawns) may call sudo.
-     * A temporary sudo wrapper is placed first in PATH so that any sudo invocation
-     * receives the password via stdin (-S) rather than requiring a TTY — this works
-     * even on macOS where timestamp_type=tty prevents credential caching across
-     * process boundaries.
+     * When $sudoPass is provided a temporary sudo wrapper is injected at the
+     * front of PATH so that any sudo call inside the command receives the
+     * password non-interactively via stdin (-S).  The password travels through
+     * the _VSM_SUDO_PASS env var — never via argv.
      */
     public static function exec(string $cmd, string $cwd, string $sudoPass = ''): array
     {
         $phpBin = PHP_BINARY;
-        $home   = getenv('HOME') ?: '/tmp';
+        $home   = SYS_HOME;
 
         $tmpDir = null;
         if ($sudoPass !== '') {
-            // Write a tiny sudo wrapper that injects the password via stdin.
-            // The password is passed through an env var (never appears in argv).
             $tmpDir = sys_get_temp_dir() . '/vsm_' . bin2hex(random_bytes(4));
             @mkdir($tmpDir, 0700, true);
             file_put_contents(

@@ -35,8 +35,7 @@ switch ($action) {
 
     // ── Sudo pre-flight check ─────────────────────────────────────────────
     case 'check_sudo': {
-        [, $code] = WpExecutor::exec('sudo -n true 2>/dev/null', APP_DIR);
-        ok(['needs_password' => $code !== 0]);
+        ok(['needs_password' => $platform->needsSudoPassword()]);
     }
 
     // ── Inline command runner ─────────────────────────────────────────────
@@ -46,33 +45,17 @@ switch ($action) {
         if (!$path) fail('Invalid site', 404);
         $cmd = trim($body['cmd'] ?? '');
         if ($cmd === '' || strlen($cmd) > 2000) fail('Invalid command');
-        [$output, $code] = WpExecutor::exec($cmd, $path);
+        [$output, $code] = $platform->exec($cmd, $path);
         ok(['output' => $output, 'exit_code' => $code]);
     }
 
-    // ── Open URL in specific browser app (macOS) ──────────────────────────
+    // ── Open URL in browser ───────────────────────────────────────────────
     case 'open_browser': {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') fail('POST required');
         $url = filter_var($body['url'] ?? '', FILTER_VALIDATE_URL);
         if (!$url) fail('Invalid URL');
         $app = preg_replace('/[^a-z]/i', '', strtolower($body['app'] ?? ''));
-        $map = [
-            'chrome'  => 'Google Chrome',
-            'firefox' => 'Firefox',
-            'safari'  => 'Safari',
-            'arc'     => 'Arc',
-            'brave'   => 'Brave Browser',
-            'edge'    => 'Microsoft Edge',
-        ];
-        $u = escapeshellarg($url);
-        if ($app === '' || $app === 'default') {
-            exec("open {$u} > /dev/null 2>&1 &");
-        } elseif (isset($map[$app])) {
-            $a = escapeshellarg($map[$app]);
-            exec("open -a {$a} {$u} > /dev/null 2>&1 &");
-        } else {
-            fail('Unknown browser');
-        }
+        $platform->openInBrowser($url, $app);
         ok();
     }
 
@@ -101,7 +84,7 @@ switch ($action) {
     case 'debug_status': {
         $path = SiteScanner::sitePath($_GET['site'] ?? '', $root);
         if (!$path) fail('Invalid site', 404);
-        [$out] = WpExecutor::exec('wp config get WP_DEBUG_LOG', $path);
+        [$out] = $platform->exec('wp config get WP_DEBUG_LOG', $path);
         $val   = strtolower(trim($out));
         ok(['enabled' => in_array($val, ['1', 'true'], true)]);
     }
@@ -114,22 +97,20 @@ switch ($action) {
         $flag   = $enable ? 'true' : 'false';
         $steps  = [];
         $cmd1   = 'wp config set WP_DEBUG true --raw';
-        [$out1, $c1] = WpExecutor::exec($cmd1, $path);
+        [$out1, $c1] = $platform->exec($cmd1, $path);
         $steps[] = ['label' => 'Enable WP_DEBUG', 'ok' => $c1 === 0, 'cmd' => $cmd1, 'output' => trim($out1)];
         $cmd2   = "wp config set WP_DEBUG_LOG {$flag} --raw";
-        [$out2, $c2] = WpExecutor::exec($cmd2, $path);
+        [$out2, $c2] = $platform->exec($cmd2, $path);
         $steps[] = ['label' => "Set WP_DEBUG_LOG {$flag}", 'ok' => $c2 === 0, 'cmd' => $cmd2, 'output' => trim($out2)];
         ok(['enabled' => $enable, 'code' => $c2, 'steps' => $steps]);
     }
 
-    // ── Terminal launchers (macOS native) ────────────────────────────────
+    // ── Terminal launchers ────────────────────────────────────────────────
     case 'open_terminal': {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') fail('POST required');
         $path = SiteScanner::sitePath($body['site'] ?? '', $root);
         if (!$path) fail('Invalid site', 404);
-        $safe   = str_replace(['"', '\\'], ['\\"', '\\\\'], $path);
-        $script = "tell application \"Terminal\"\n\tdo script \"cd \\\"$safe\\\"\"\n\tactivate\nend tell";
-        exec('osascript -e ' . escapeshellarg($script) . ' > /dev/null 2>&1 &');
+        $platform->openTerminal($path);
         ok();
     }
 
@@ -137,9 +118,7 @@ switch ($action) {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') fail('POST required');
         $path = SiteScanner::sitePath($body['site'] ?? '', $root);
         if (!$path) fail('Invalid site', 404);
-        $safe   = str_replace(['"', '\\'], ['\\"', '\\\\'], $path);
-        $script = "tell application \"Terminal\"\n\tdo script \"cd \\\"$safe\\\" && wp shell\"\n\tactivate\nend tell";
-        exec('osascript -e ' . escapeshellarg($script) . ' > /dev/null 2>&1 &');
+        $platform->openWpCli($path);
         ok();
     }
 
@@ -150,18 +129,18 @@ switch ($action) {
         if (!$path) fail('Invalid site', 404);
         $results = [];
 
-        [$msg, $c] = WpExecutor::exec('wp cache flush', $path);
+        [$msg, $c] = $platform->exec('wp cache flush', $path);
         $results[] = ['label' => 'Flush object cache', 'ok' => $c === 0, 'cmd' => 'wp cache flush', 'msg' => trim($msg)];
 
-        [$msg, $c] = WpExecutor::exec('wp transient delete --all', $path);
+        [$msg, $c] = $platform->exec('wp transient delete --all', $path);
         $results[] = ['label' => 'Delete transients', 'ok' => $c === 0, 'cmd' => 'wp transient delete --all', 'msg' => trim($msg)];
 
-        [$ids_str] = WpExecutor::exec('wp post list --post_type=revision --format=ids', $path);
+        [$ids_str] = $platform->exec('wp post list --post_type=revision --format=ids', $path);
         $ids = trim($ids_str);
         if ($ids !== '' && preg_match('/^\d[\d\s]*$/', $ids)) {
             $count = count(explode(' ', trim($ids)));
             $delCmd = "wp post delete {$ids} --force";
-            [$msg, $c] = WpExecutor::exec($delCmd, $path);
+            [$msg, $c] = $platform->exec($delCmd, $path);
             $results[] = ['label' => "Delete {$count} revision(s)", 'ok' => $c === 0, 'cmd' => $delCmd, 'msg' => trim($msg)];
         } else {
             $results[] = ['label' => 'Post revisions', 'ok' => true, 'cmd' => 'wp post list --post_type=revision --format=ids', 'msg' => 'No revisions found'];
@@ -209,23 +188,23 @@ switch ($action) {
 
         $sudoPass = trim($body['sudo_pass'] ?? '');
 
-        // Check if site lives in a parked directory (no valet unlink needed)
-        $valetCfg    = json_decode(@file_get_contents(getenv('HOME') . '/.config/valet/config.json') ?: '{}', true);
+        // Check if site lives in a parked directory (no unlink needed)
+        $valetCfg    = json_decode(@file_get_contents($platform->valetConfigFile()) ?: '{}', true);
         $parkedPaths = array_filter(array_map('realpath', $valetCfg['paths'] ?? []));
         $isParked    = in_array(realpath(dirname($path)), $parkedPaths, true);
 
         // Drop WordPress database before removing files
         if (file_exists($path . '/wp-config.php')) {
-            [$dbOut, $dbCode] = WpExecutor::exec('wp db drop --yes', $path);
+            [$dbOut, $dbCode] = $platform->exec('wp db drop --yes', $path);
             $steps[] = ['label' => 'Drop database', 'ok' => $dbCode === 0, 'cmd' => 'wp db drop --yes', 'output' => trim($dbOut)];
         }
-        // Valet unlink
+        // Valet/Herd unlink
         if ($isParked) {
-            $steps[] = ['label' => 'Valet unlink', 'ok' => true, 'cmd' => 'skipped — parent directory is parked', 'output' => ''];
+            $steps[] = ['label' => 'Unlink', 'ok' => true, 'cmd' => 'skipped — parent directory is parked', 'output' => ''];
         } else {
-            $unlinkCmd = 'valet unlink ' . escapeshellarg($siteName);
-            [$uOut, $uCode] = WpExecutor::exec($unlinkCmd, $path, $sudoPass);
-            $steps[] = ['label' => 'Valet unlink', 'ok' => $uCode === 0, 'cmd' => $unlinkCmd, 'output' => trim($uOut)];
+            $unlinkCmd = $platform->valetBin() . ' unlink ' . escapeshellarg($siteName);
+            [$uOut, $uCode] = $platform->exec($unlinkCmd, $path, $sudoPass);
+            $steps[] = ['label' => 'Unlink', 'ok' => $uCode === 0, 'cmd' => $unlinkCmd, 'output' => trim($uOut)];
         }
         // Remove directory
         function rm_rf(string $dir): void {
@@ -271,8 +250,8 @@ switch ($action) {
 
         $sudoPass = trim($body['sudo_pass'] ?? '');
 
-        // Determine if parent is already a Valet-parked path (no sudo link needed)
-        $valetCfg    = json_decode(@file_get_contents(getenv('HOME') . '/.config/valet/config.json') ?: '{}', true);
+        // Determine if parent is already a parked path (no link step needed)
+        $valetCfg    = json_decode(@file_get_contents($platform->valetConfigFile()) ?: '{}', true);
         $parkedPaths = array_filter(array_map('realpath', $valetCfg['paths'] ?? []));
         $isParked    = in_array(realpath($parentDir), $parkedPaths, true);
 
@@ -309,13 +288,13 @@ switch ($action) {
                 file_put_contents($sitePath . '/index.php', "<?php\necho 'Hello, {$siteName}!';\n");
                 $step('Create index.php', true, "echo '<?php …' > index.php");
             }
-            // Valet link (only needed when parent is not a parked directory)
+            // Link (only needed when parent is not a parked directory)
             if ($isParked) {
-                $step('Valet link', true, 'skipped — parent directory is parked', '');
+                $step('Link', true, 'skipped — parent directory is parked', '');
             } else {
-                $vlinkCmd = 'valet link ' . escapeshellarg($name);
-                [$out, $code] = WpExecutor::exec($vlinkCmd, $sitePath, $sudoPass);
-                $step('Valet link', $code === 0, $vlinkCmd, trim($out));
+                $vlinkCmd = $platform->valetBin() . ' link ' . escapeshellarg($name);
+                [$out, $code] = $platform->exec($vlinkCmd, $sitePath, $sudoPass);
+                $step('Link', $code === 0, $vlinkCmd, trim($out));
             }
             ok(['ok' => true, 'steps' => $steps, 'url' => 'http://' . $name . '.test']);
         }
@@ -337,7 +316,7 @@ switch ($action) {
         $dbName = str_replace('-', '_', $name);
         $url    = 'http://' . $name . '.test';
 
-        [$out, $code] = WpExecutor::exec('wp core download', $sitePath);
+        [$out, $code] = $platform->exec('wp core download', $sitePath);
         $step('Download WordPress', $code === 0, 'wp core download', $out);
         if ($code !== 0) ok(['ok' => false, 'error' => 'Core download failed', 'steps' => $steps]);
 
@@ -346,11 +325,11 @@ switch ($action) {
             escapeshellarg($dbName), escapeshellarg($dbUser),
             escapeshellarg($dbPass), escapeshellarg($dbHost)
         );
-        [$out, $code] = WpExecutor::exec($cfgCmd, $sitePath);
+        [$out, $code] = $platform->exec($cfgCmd, $sitePath);
         $step('Create wp-config.php', $code === 0, $cfgCmd, $out);
         if ($code !== 0) ok(['ok' => false, 'error' => 'Config failed', 'steps' => $steps]);
 
-        [$out, $code] = WpExecutor::exec('wp db create', $sitePath);
+        [$out, $code] = $platform->exec('wp db create', $sitePath);
         $step('Create database', $code === 0, 'wp db create', $out);
         if ($code !== 0) ok(['ok' => false, 'error' => 'DB creation failed', 'steps' => $steps]);
 
@@ -359,39 +338,39 @@ switch ($action) {
             escapeshellarg($url), escapeshellarg(ucwords(str_replace('-',' ',$name))),
             escapeshellarg($adminUser), escapeshellarg($adminPass), escapeshellarg($adminEmail)
         );
-        [$out, $code] = WpExecutor::exec($installCmd, $sitePath);
+        [$out, $code] = $platform->exec($installCmd, $sitePath);
         $step('Install WordPress', $code === 0, $installCmd, $out);
         if ($code !== 0) ok(['ok' => false, 'error' => 'Install failed', 'steps' => $steps]);
 
         foreach ($plugins as $plugin) {
             $pCmd = 'wp plugin install ' . escapeshellarg($plugin) . ' --activate';
-            [$out, $code] = WpExecutor::exec($pCmd, $sitePath);
+            [$out, $code] = $platform->exec($pCmd, $sitePath);
             $step('Plugin: ' . basename($plugin), $code === 0, $pCmd, trim($out));
         }
         foreach ($themes as $theme) {
             $tCmd = 'wp theme install ' . escapeshellarg($theme);
-            [$out, $code] = WpExecutor::exec($tCmd, $sitePath);
+            [$out, $code] = $platform->exec($tCmd, $sitePath);
             $step('Theme: ' . basename($theme), $code === 0, $tCmd, trim($out));
         }
 
-        // Valet link (only needed when parent is not a parked directory)
+        // Link (only needed when parent is not a parked directory)
         if ($isParked) {
-            $step('Valet link', true, 'skipped — parent directory is parked', '');
+            $step('Link', true, 'skipped — parent directory is parked', '');
         } else {
-            $vlinkCmd2 = 'valet link ' . escapeshellarg($name);
-            [$out, $code] = WpExecutor::exec($vlinkCmd2, $sitePath, $sudoPass);
-            $step('Valet link', $code === 0, $vlinkCmd2, trim($out));
+            $vlinkCmd2 = $platform->valetBin() . ' link ' . escapeshellarg($name);
+            [$out, $code] = $platform->exec($vlinkCmd2, $sitePath, $sudoPass);
+            $step('Link', $code === 0, $vlinkCmd2, trim($out));
         }
 
         ok(['ok' => true, 'steps' => $steps, 'url' => $url, 'admin_url' => APP_URL . '/login.php?site='.rawurlencode($name)]);
     }
 
-    // ── Open in Finder (macOS) ────────────────────────────────────────────
+    // ── Open in file browser (Finder / Explorer) ─────────────────────────
     case 'open_finder': {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') fail('POST required');
         $path = SiteScanner::sitePath($body['site'] ?? '', $root);
         if (!$path) fail('Invalid site', 404);
-        exec('open ' . escapeshellarg($path) . ' > /dev/null 2>&1 &');
+        $platform->openExplorer($path);
         ok();
     }
 
@@ -413,22 +392,11 @@ switch ($action) {
         ok();
     }
 
-    // ── Native macOS file/directory picker ────────────────────────────────
+    // ── Native folder picker ──────────────────────────────────────────────
     case 'pick_path': {
-        $type   = ($_GET['type'] ?? 'folder') === 'file' ? 'file' : 'folder';
-        $prompt = addslashes($type === 'folder' ? 'Select a directory:' : 'Select a file:');
-        $script = $type === 'folder'
-            ? "POSIX path of (choose folder with prompt \"{$prompt}\")"
-            : "POSIX path of (choose file with prompt \"{$prompt}\")";
-        $desc = [0 => ['pipe','r'], 1 => ['pipe','w'], 2 => ['pipe','w']];
-        $proc = @proc_open(['osascript', '-e', $script], $desc, $pipes);
-        if (!is_resource($proc)) fail('osascript unavailable');
-        fclose($pipes[0]);
-        $out  = trim(stream_get_contents($pipes[1]));
-        fclose($pipes[1]); fclose($pipes[2]);
-        $code = proc_close($proc);
-        if ($code !== 0 || $out === '') ok(['path' => null, 'cancelled' => true]);
-        ok(['path' => rtrim($out, "/\n")]);
+        $result = $platform->pickFolder();
+        if ($result === null) ok(['path' => null, 'cancelled' => true]);
+        ok(['path' => $result]);
     }
 
     case 'toggle_ssl': {
@@ -438,12 +406,11 @@ switch ($action) {
         $secure   = !empty($body['secure']);
         $sudoPass = trim($body['sudo_pass'] ?? '');
         if ($name === '') fail('Missing name');
-        $cmd = $secure
-            ? 'valet secure '   . escapeshellarg($name)
-            : 'valet unsecure ' . escapeshellarg($name);
-        [$out, $code] = WpExecutor::exec($cmd, APP_DIR, $sudoPass);
-        // valet secure restarts PHP-FPM/nginx — if we get here, it completed before restart
-        if ($code !== 0) fail($out ?: ($secure ? 'valet secure failed' : 'valet unsecure failed'));
+        $verb = $secure ? 'secure' : 'unsecure';
+        $cmd  = $platform->valetBin() . ' ' . $verb . ' ' . escapeshellarg($name);
+        [$out, $code] = $platform->exec($cmd, APP_DIR, $sudoPass);
+        // On macOS, valet/herd secure restarts PHP-FPM — if we get here it completed before restart
+        if ($code !== 0) fail($out ?: ($secure ? 'secure failed' : 'unsecure failed'));
         ok(['output' => $out]);
     }
 
