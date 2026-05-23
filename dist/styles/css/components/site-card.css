@@ -110,12 +110,29 @@
     }
 }
 
+.sc-top-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+}
+
+.sc-top-badges {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
 .sc-name {
     font-size: 14px;
     font-weight: 700;
     color: var(--txtb);
     letter-spacing: -.01em;
-    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .sc-url {
@@ -126,6 +143,8 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    flex-shrink: 0;
+    max-width: 160px;
 }
 
 .sc-path {
@@ -192,6 +211,18 @@
     flex-shrink: 0;
     background: var(--grnd);
     color: var(--grn);
+}
+
+.sc-debug-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    background: var(--ambd);
+    color: var(--amb);
 }
 
 /* ─── Site Type Tabs ────────────────────────────────────────────────────── */
@@ -297,6 +328,28 @@ body.hide-log-sz .log-sz { display: none }
     padding: 1px 5px;
     line-height: 1.4;
     white-space: nowrap
+}
+
+/* ─── Debug ON dot ──────────────────────────────────────────────────────── */
+.js-debug-toggle {
+    position: relative
+}
+
+.debug-dot {
+    display: none;
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--grn);
+    box-shadow: 0 0 6px var(--grn);
+    border: 1.5px solid var(--sur);
+}
+
+.btn-a-on .debug-dot {
+    display: block
 }
 
 /* ─── Archive button ────────────────────────────────────────────────────── */

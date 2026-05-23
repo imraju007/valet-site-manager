@@ -254,6 +254,8 @@ function refreshDebugBtn(site) {
   lbl.textContent = on ? 'Debug ON' : 'Debug OFF';
   btn.classList.toggle('btn-a-on', on);
   btn.dataset.enabled = on ? '1' : '0';
+  const badge = btn.closest('.sc')?.querySelector('.sc-debug-badge');
+  if (badge) badge.style.display = on ? '' : 'none';
 }
 
 const dbgObserver = new IntersectionObserver(entries => {

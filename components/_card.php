@@ -13,10 +13,15 @@ $fmt_bytes = function(int $b): string {
   data-debug="unknown">
   <div class="sc-accent"></div>
   <div class="sc-top">
-    <div class="sc-dot"></div>
-    <span class="sc-name"><?= $hn($e['name']) ?></span>
-    <span class="sc-type-badge sc-type-<?= $e['type'] ?>"><?= $e['type'] === 'wordpress' ? 'WP' : 'Static' ?></span>
-    <?php if ($e['ssl']): ?><span class="sc-ssl-badge" title="HTTPS enabled"><svg width="9" height="9"><use href="#i-lock"/></svg></span><?php endif; ?>
+    <div class="sc-top-name">
+      <div class="sc-dot"></div>
+      <span class="sc-name"><?= $hn($e['name']) ?></span>
+    </div>
+    <div class="sc-top-badges">
+      <span class="sc-type-badge sc-type-<?= $e['type'] ?>"><?= $e['type'] === 'wordpress' ? 'WP' : 'Static' ?></span>
+      <?php if ($e['ssl']): ?><span class="sc-ssl-badge" title="HTTPS enabled"><svg width="9" height="9"><use href="#i-lock"/></svg></span><?php endif; ?>
+      <?php if ($e['type'] === 'wordpress'): ?><span class="sc-debug-badge" title="WP_DEBUG_LOG enabled" style="display:none"><svg width="9" height="9"><use href="#i-bug"/></svg></span><?php endif; ?>
+    </div>
     <span class="sc-url"><?= $hn($e['url']) ?></span>
   </div>
   <div class="sc-path" title="<?= $hn($e['path']) ?>"><?= $hn($e['path']) ?></div>
@@ -110,7 +115,7 @@ $fmt_bytes = function(int $b): string {
     </button>
 
     <button class="btn btn-a js-debug-toggle" data-site="<?= $hn($e['name']) ?>" data-enabled="unknown" title="Toggle WP_DEBUG_LOG">
-      <svg><use href="#i-bug"/></svg><span class="btn-lbl dl">Debug…</span>
+      <svg><use href="#i-bug"/></svg><span class="btn-lbl dl">Debug…</span><span class="debug-dot"></span>
     </button>
 
     <div class="sc-sep"></div>
@@ -133,7 +138,7 @@ $fmt_bytes = function(int $b): string {
     </button>
     <?php else: ?>
     <button class="btn btn-v js-unarchive" data-site="<?= $hn($e['name']) ?>" title="Restore to active sites">
-      <svg><use href="#i-archive"/></svg><span class="btn-lbl">Unarchive</span>
+      <svg><use href="#i-unarchive"/></svg><span class="btn-lbl">Unarchive</span>
     </button>
     <button class="btn btn-r js-site-delete" data-site="<?= $hn($e['name']) ?>" title="Delete site &amp; unlink from Valet">
       <svg><use href="#i-trash"/></svg><span class="btn-lbl">Delete</span>
