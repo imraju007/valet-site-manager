@@ -510,6 +510,20 @@
     color: var(--txt);
 }
 
+.btn-vis-sub {
+    border-left: 2px solid var(--bd);
+    margin-left: 10px;
+    padding-left: 8px;
+    margin-top: 1px;
+    margin-bottom: 2px;
+}
+
+.btn-vis-sub.hidden { display: none }
+
+.btn-vis-sub-row {
+    opacity: .8
+}
+
 /* ─── sp-panel (style option panel) ────────────────────────────────────── */
 .sp-panel {
     position: fixed;

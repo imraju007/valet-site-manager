@@ -105,6 +105,9 @@
               <label class="btn-vis-row"><span>Terminal</span><span class="tgl-sw"><input type="checkbox" data-btn-key="terminal"><span class="tgl-track"></span></span></label>
               <label class="btn-vis-row"><span>WP-CLI</span><span class="tgl-sw"><input type="checkbox" data-btn-key="wpcli"><span class="tgl-track"></span></span></label>
               <label class="btn-vis-row"><span>Log</span><span class="tgl-sw"><input type="checkbox" data-btn-key="log"><span class="tgl-track"></span></span></label>
+              <div class="btn-vis-sub" id="log-subopts">
+                <label class="btn-vis-row btn-vis-sub-row"><span>Size badge</span><span class="tgl-sw"><input type="checkbox" id="tgl-log-sz"><span class="tgl-track"></span></span></label>
+              </div>
               <label class="btn-vis-row"><span>Debug</span><span class="tgl-sw"><input type="checkbox" data-btn-key="debug"><span class="tgl-track"></span></span></label>
               <label class="btn-vis-row"><span>Clean DB</span><span class="tgl-sw"><input type="checkbox" data-btn-key="clean"><span class="tgl-track"></span></span></label>
             </div>

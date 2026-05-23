@@ -29,6 +29,7 @@ A local WordPress development dashboard served through Laravel Valet. Manage all
 - Mac running macOS 12 Monterey or later
 - Admin access (some steps require `sudo`)
 - Terminal (built-in Terminal.app or iTerm2)
+- **phpMyAdmin** _(optional but recommended)_ — for a GUI database browser at `http://phpmyadmin.test`
 
 ---
 
@@ -127,7 +128,64 @@ Verify MySQL is running:
 brew services list | grep mysql
 ```
 
-### Step 7 — WP-CLI
+### Step 7 — phpMyAdmin
+
+phpMyAdmin gives you a browser-based GUI for managing your MySQL databases. Install it via Homebrew and link it as a Valet site so it's always available at **http://phpmyadmin.test**.
+
+#### Install
+
+```bash
+brew install phpmyadmin
+```
+
+#### Configure
+
+Copy the sample config and open it for editing:
+
+```bash
+cp "$(brew --prefix)/share/phpmyadmin/config.sample.inc.php" \
+   "$(brew --prefix)/share/phpmyadmin/config.inc.php"
+open "$(brew --prefix)/share/phpmyadmin/config.inc.php"
+```
+
+Make two changes inside `config.inc.php`:
+
+**1. Set a blowfish secret** (any random 32-character string — used to encrypt cookies):
+
+```php
+$cfg['blowfish_secret'] = 'your-32-character-random-string!!';
+```
+
+Generate one quickly:
+```bash
+openssl rand -base64 32 | tr -dc 'a-zA-Z0-9' | head -c 32
+```
+
+**2. Set the host to `127.0.0.1`** (find the `$i = 1` server block):
+
+```php
+$cfg['Servers'][$i]['host'] = '127.0.0.1';
+```
+
+#### Link with Valet
+
+```bash
+cd "$(brew --prefix)/share/phpmyadmin"
+valet link phpmyadmin
+```
+
+Verify the link:
+```bash
+valet links   # phpmyadmin → /opt/homebrew/share/phpmyadmin (or /usr/local/...)
+```
+
+Visit **http://phpmyadmin.test** — log in with your MySQL `root` credentials (password set in Step 6, or blank if you skipped `mysql_secure_installation`).
+
+> **Tip:** Run `valet secure phpmyadmin` to serve it over HTTPS at `https://phpmyadmin.test`.
+
+---
+
+### Step 8 — WP-CLI
 
 ```bash
 brew install wp-cli
@@ -335,6 +393,29 @@ php -v          # CLI version
 valet php -v    # Valet's PHP version
 ```
 Both should match. Switch with `valet use php@8.2` if needed.
+
+**phpMyAdmin not loading at `phpmyadmin.test`**
+```bash
+valet links               # confirm phpmyadmin is listed
+valet start               # ensure Valet/nginx is running
+ping -c1 phpmyadmin.test  # should return 127.0.0.1
+```
+If the link is missing, re-run:
+```bash
+cd "$(brew --prefix)/share/phpmyadmin" && valet link phpmyadmin
+```
+
+**phpMyAdmin shows "The configuration file now needs a secret passphrase"**
+
+You skipped setting `blowfish_secret`. Open `config.inc.php` (path from `brew --prefix phpmyadmin`) and set it to any 32-character string.
+
+**phpMyAdmin "Access denied for user 'root'@'localhost'"**
+
+Make sure the host in `config.inc.php` is `127.0.0.1`, not `localhost`. MySQL on macOS uses a socket for `localhost` but TCP for `127.0.0.1`.
+
+```php
+$cfg['Servers'][$i]['host'] = '127.0.0.1';
+```
 
 **Permission denied errors**
 ```bash

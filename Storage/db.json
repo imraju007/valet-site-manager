@@ -1,5 +1,5 @@
 {
-    "__tasks__": {},
+    "__tasks__": [],
     "__settings__": {
         "appearance": {
             "action_btn": [],
@@ -49,7 +49,7 @@
         "new_site_default": {
             "plugins": [],
             "themes": [],
-            "folder_structure": {},
+            "folder_structure": [],
             "wp_parent_dir": "",
             "static_parent_dir": ""
         },
@@ -64,5 +64,7 @@
             "email": ""
         }
     },
-    "__archived__": []
+    "__archived__": [
+        "wp-explore"
+    ]
 }

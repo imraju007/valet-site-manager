@@ -3,6 +3,60 @@ declare(strict_types=1);
 
 class SiteScanner
 {
+    public static function detectInstalledApps(): array
+    {
+        $home = getenv('HOME') ?: '';
+
+        // Scan every .app in standard install locations into a fast lookup table
+        $appDirs = array_filter(['/Applications', $home ? "{$home}/Applications" : ''], 'is_dir');
+        $found   = [];
+        foreach ($appDirs as $dir) {
+            foreach (glob("{$dir}/*.app") ?: [] as $p) {
+                $found[basename($p)] = true;
+            }
+        }
+
+        // Browsers — matched by canonical .app bundle name
+        $browserDefs = [
+            'chrome'  => 'Google Chrome.app',
+            'firefox' => 'Firefox.app',
+            'safari'  => 'Safari.app',
+            'arc'     => 'Arc.app',
+            'brave'   => 'Brave Browser.app',
+        ];
+
+        // IDEs — .app bundle name + fallback CLI binary paths
+        $ideDefs = [
+            'phpstorm' => [
+                'app' => 'PhpStorm.app',
+                'cli' => [],
+            ],
+            'vscode' => [
+                'app' => 'Visual Studio Code.app',
+                'cli' => ['/usr/local/bin/code', '/opt/homebrew/bin/code'],
+            ],
+            'cursor' => [
+                'app' => 'Cursor.app',
+                'cli' => ['/usr/local/bin/cursor', '/opt/homebrew/bin/cursor'],
+            ],
+        ];
+
+        $browsers = [];
+        foreach ($browserDefs as $key => $appName) {
+            if (isset($found[$appName])) $browsers[] = $key;
+        }
+
+        $ides = [];
+        foreach ($ideDefs as $key => $def) {
+            if (isset($found[$def['app']])) { $ides[] = $key; continue; }
+            foreach ($def['cli'] as $bin) {
+                if (file_exists($bin)) { $ides[] = $key; break; }
+            }
+        }
+
+        return ['browsers' => $browsers, 'ides' => $ides];
+    }
+
     public static function valetSites(): array
     {
         $home = getenv('HOME') ?: '';
@@ -75,9 +129,14 @@ class SiteScanner
 
     private static function buildEntry(string $name, string $path, string $type, bool $linked): array
     {
+        $home    = getenv('HOME') ?: '';
+        $ssl     = $home !== '' && file_exists($home . '/.config/valet/Certificates/' . $name . '.test.crt');
+        $logFile = $type === 'wordpress' ? $path . '/wp-content/debug.log' : '';
+        $logSize = ($logFile !== '' && file_exists($logFile)) ? (int)filesize($logFile) : 0;
+
         return [
             'name'     => $name,
-            'url'      => 'http://' . $name . '.test',
+            'url'      => ($ssl ? 'https://' : 'http://') . $name . '.test',
             'admin'    => APP_URL . '/login.php?site=' . rawurlencode($name),
             'path'     => $path,
             'type'     => $type,
@@ -85,6 +144,8 @@ class SiteScanner
             'vscode'   => 'vscode://file/' . str_replace('%2F', '/', rawurlencode($path)),
             'cursor'   => 'cursor://file/' . str_replace('%2F', '/', rawurlencode($path)),
             'linked'   => $linked,
+            'ssl'      => $ssl,
+            'log_size' => $logSize,
         ];
     }
 }

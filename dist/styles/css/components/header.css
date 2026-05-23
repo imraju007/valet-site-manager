@@ -230,3 +230,9 @@
 .hdr-more-item .nav-count {
     margin-left: auto
 }
+
+.hdr-more-sep {
+    height: 1px;
+    background: var(--bd);
+    margin: 4px 6px
+}

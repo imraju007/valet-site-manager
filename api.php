@@ -431,6 +431,22 @@ switch ($action) {
         ok(['path' => rtrim($out, "/\n")]);
     }
 
+    case 'toggle_ssl': {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') fail('POST required');
+        set_time_limit(0);
+        $name     = trim($body['name']     ?? '');
+        $secure   = !empty($body['secure']);
+        $sudoPass = trim($body['sudo_pass'] ?? '');
+        if ($name === '') fail('Missing name');
+        $cmd = $secure
+            ? 'valet secure '   . escapeshellarg($name)
+            : 'valet unsecure ' . escapeshellarg($name);
+        [$out, $code] = WpExecutor::exec($cmd, APP_DIR, $sudoPass);
+        // valet secure restarts PHP-FPM/nginx — if we get here, it completed before restart
+        if ($code !== 0) fail($out ?: ($secure ? 'valet secure failed' : 'valet unsecure failed'));
+        ok(['output' => $out]);
+    }
+
     case 'toggle_archive': {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') fail('POST required');
         $name    = trim($body['name']    ?? '');

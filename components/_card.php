@@ -1,4 +1,11 @@
-<?php $hn = fn($s) => htmlspecialchars($s, ENT_QUOTES, 'UTF-8'); ?>
+<?php
+$hn        = fn($s) => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
+$fmt_bytes = function(int $b): string {
+    if ($b >= 1048576) return round($b / 1048576, 1) . ' MB';
+    if ($b >= 1024)    return round($b / 1024, 1) . ' KB';
+    return $b . ' B';
+};
+?>
 <div class="sc<?= $archived ? ' sc-archived' : '' ?>"
   data-site="<?= $hn($e['name']) ?>"
   data-search="<?= $hn(strtolower($e['name'])) ?>"
@@ -9,25 +16,35 @@
     <div class="sc-dot"></div>
     <span class="sc-name"><?= $hn($e['name']) ?></span>
     <span class="sc-type-badge sc-type-<?= $e['type'] ?>"><?= $e['type'] === 'wordpress' ? 'WP' : 'Static' ?></span>
+    <?php if ($e['ssl']): ?><span class="sc-ssl-badge" title="HTTPS enabled"><svg width="9" height="9"><use href="#i-lock"/></svg></span><?php endif; ?>
     <span class="sc-url"><?= $hn($e['url']) ?></span>
   </div>
   <div class="sc-path" title="<?= $hn($e['path']) ?>"><?= $hn($e['path']) ?></div>
   <div class="sc-actions">
 
+    <?php
+    $browser_list = [
+        ['chrome',  '🟡', 'Chrome'],
+        ['firefox', '🦊', 'Firefox'],
+        ['safari',  '🔵', 'Safari'],
+        ['arc',     '◎',  'Arc'],
+        ['brave',   '🦁', 'Brave'],
+    ];
+    $avail_browsers = array_filter($browser_list, fn($b) => in_array($b[0], $installed['browsers']));
+    ?>
     <div class="open-wrap">
       <button class="btn btn-c js-open-trigger" data-url="<?= $hn($e['url']) ?>">
         <svg><use href="#i-globe"/></svg>
         <span class="btn-lbl">Open</span>
-        <svg class="btn-arr" width="10" height="10"><use href="#i-chevd"/></svg>
       </button>
       <div class="open-menu">
-        <div class="om-item" data-app="tab"     data-url="<?= $hn($e['url']) ?>"><span class="om-item-ic">⊕</span> New Tab</div>
+        <div class="om-item" data-app="tab" data-url="<?= $hn($e['url']) ?>"><span class="om-item-ic">⊕</span> New Tab</div>
+        <?php if ($avail_browsers): ?>
         <div class="om-sep"></div>
-        <div class="om-item" data-app="chrome"  data-url="<?= $hn($e['url']) ?>"><span class="om-item-ic">🟡</span> Chrome</div>
-        <div class="om-item" data-app="firefox" data-url="<?= $hn($e['url']) ?>"><span class="om-item-ic">🦊</span> Firefox</div>
-        <div class="om-item" data-app="safari"  data-url="<?= $hn($e['url']) ?>"><span class="om-item-ic">🔵</span> Safari</div>
-        <div class="om-item" data-app="arc"     data-url="<?= $hn($e['url']) ?>"><span class="om-item-ic">◎</span> Arc</div>
-        <div class="om-item" data-app="brave"   data-url="<?= $hn($e['url']) ?>"><span class="om-item-ic">🦁</span> Brave</div>
+        <?php foreach ($avail_browsers as [$app, $ic, $label]): ?>
+        <div class="om-item" data-app="<?= $app ?>" data-url="<?= $hn($e['url']) ?>"><span class="om-item-ic"><?= $ic ?></span> <?= $label ?></div>
+        <?php endforeach; ?>
+        <?php endif; ?>
       </div>
     </div>
 
@@ -37,17 +54,41 @@
     </a>
     <?php endif; ?>
 
-    <button class="btn btn-v js-ide"
-      data-path="<?= $hn($e['path']) ?>"
-      data-phpstorm="<?= $hn($e['phpstorm']) ?>"
-      data-vscode="<?= $hn($e['vscode']) ?>"
-      data-cursor="<?= $hn($e['cursor']) ?>"
-      title="Open in IDE">
-      <svg><use href="#i-code"/></svg><span class="btn-lbl">IDE</span>
-    </button>
+    <?php if ($installed['ides']): ?>
+    <div class="ide-wrap">
+      <button class="btn btn-v" title="Open in IDE">
+        <svg><use href="#i-code"/></svg><span class="btn-lbl">IDE</span>
+      </button>
+      <div class="ide-menu">
+        <?php if (in_array('phpstorm', $installed['ides'])): ?>
+        <a class="ide-item ide-phpstorm" href="<?= $hn($e['phpstorm']) ?>">
+          <span class="ide-item-ic">PS</span><span>PhpStorm</span>
+        </a>
+        <?php endif; ?>
+        <?php if (in_array('vscode', $installed['ides'])): ?>
+        <a class="ide-item ide-vscode" href="<?= $hn($e['vscode']) ?>">
+          <span class="ide-item-ic">&lt;/&gt;</span><span>VS Code</span>
+        </a>
+        <?php endif; ?>
+        <?php if (in_array('cursor', $installed['ides'])): ?>
+        <a class="ide-item ide-cursor" href="<?= $hn($e['cursor']) ?>">
+          <span class="ide-item-ic">✦</span><span>Cursor</span>
+        </a>
+        <?php endif; ?>
+      </div>
+    </div>
+    <?php endif; ?>
+
 
     <button class="btn js-finder" data-site="<?= $hn($e['name']) ?>" title="Reveal in Finder">
       <svg><use href="#i-folder"/></svg><span class="btn-lbl">Finder</span>
+    </button>
+
+    <button class="btn <?= $e['ssl'] ? 'btn-g btn-g-on' : '' ?> js-ssl"
+      data-site="<?= $hn($e['name']) ?>"
+      data-secure="<?= $e['ssl'] ? 'true' : 'false' ?>"
+      title="<?= $e['ssl'] ? 'HTTPS enabled — click to disable (valet unsecure)' : 'Enable HTTPS (valet secure)' ?>">
+      <svg><use href="<?= $e['ssl'] ? '#i-lock' : '#i-lock-open' ?>"/></svg><span class="btn-lbl"><?= $e['ssl'] ? 'Disable SSL' : 'Enable SSL' ?></span>
     </button>
 
     <?php if ($e['type'] === 'wordpress'): ?>
@@ -65,6 +106,7 @@
 
     <button class="btn btn-a js-debug-log" data-site="<?= $hn($e['name']) ?>" title="View debug.log">
       <svg><use href="#i-doc"/></svg><span class="btn-lbl">Log</span>
+      <?php if ($e['log_size'] > 0): ?><span class="log-sz"><?= $fmt_bytes($e['log_size']) ?></span><?php endif; ?>
     </button>
 
     <button class="btn btn-a js-debug-toggle" data-site="<?= $hn($e['name']) ?>" data-enabled="unknown" title="Toggle WP_DEBUG_LOG">

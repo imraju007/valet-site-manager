@@ -204,6 +204,21 @@ function applyBtnVisibility(vis) {
 applyBtnVisibility(loadBtnVis());
 
 /* ═══════════════════════════════════════════════════════
+   LOG SIZE BADGE VISIBILITY
+═══════════════════════════════════════════════════════ */
+const LOG_SZ_KEY = 'sh-log-sz';
+
+function loadLogSzVis() {
+  return localStorage.getItem(LOG_SZ_KEY) !== 'false'; // default true
+}
+
+function applyLogSzVis(show) {
+  document.body.classList.toggle('hide-log-sz', !show);
+}
+
+applyLogSzVis(loadLogSzVis());
+
+/* ═══════════════════════════════════════════════════════
    SETTINGS PANEL INIT
 ═══════════════════════════════════════════════════════ */
 function initSettingsPanel() {
@@ -348,8 +363,28 @@ function initSettingsPanel() {
       applyBtnVisibility(_btnVis);
       const label = cb.closest('.btn-vis-row')?.querySelector('span')?.textContent?.trim() || cb.dataset.btnKey;
       toast(cb.checked ? `${label} button shown` : `${label} button hidden`);
+      if (cb.dataset.btnKey === 'log') syncLogSubopts();
     });
   });
+
+  // log size badge sub-option
+  const logSzTgl    = $('#tgl-log-sz');
+  const logSubopts  = $('#log-subopts');
+  const logBtnCb    = document.querySelector('[data-btn-key="log"]');
+
+  function syncLogSubopts() {
+    if (logSubopts) logSubopts.classList.toggle('hidden', logBtnCb ? !logBtnCb.checked : false);
+  }
+  syncLogSubopts();
+
+  if (logSzTgl) {
+    logSzTgl.checked = loadLogSzVis();
+    logSzTgl.addEventListener('change', () => {
+      localStorage.setItem(LOG_SZ_KEY, logSzTgl.checked ? 'true' : 'false');
+      applyLogSzVis(logSzTgl.checked);
+      toast(logSzTgl.checked ? 'Log size badge shown' : 'Log size badge hidden');
+    });
+  }
 
   // folder tree init
   folderTree.init('gs-tree');

@@ -16,10 +16,6 @@
       Tasks
       <span class="nav-count" id="nc-tasks">0</span>
     </button>
-    <button class="nav-btn" data-tab="settings">
-      <svg width="14" height="14"><use href="#i-gear"/></svg>
-      Settings
-    </button>
   </nav>
 
   <div class="hdr-right">
@@ -31,6 +27,11 @@
         <svg><use href="#i-dots"/></svg>
       </button>
       <div class="hdr-more-menu" id="hdr-more-menu">
+        <button class="hdr-more-item" data-tab="settings">
+          <svg width="14" height="14"><use href="#i-gear"/></svg>
+          Settings
+        </button>
+        <div class="hdr-more-sep"></div>
         <button class="hdr-more-item" data-tab="archive">
           <svg width="14" height="14"><use href="#i-archive"/></svg>
           Archive

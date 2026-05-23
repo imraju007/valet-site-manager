@@ -9,6 +9,7 @@ $db      = new Database(DB_FILE);
 $archived         = $db->getArchived();
 $active_entries   = array_values(array_filter($entries, fn($e) => !in_array($e['name'], $archived)));
 $archived_entries = array_values(array_filter($entries, fn($e) =>  in_array($e['name'], $archived)));
+$installed        = SiteScanner::detectInstalledApps();
 ?>
 <!doctype html>
 <html lang="en" data-theme="dark">
@@ -19,6 +20,9 @@ $archived_entries = array_values(array_filter($entries, fn($e) =>  in_array($e['
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="shortcut icon" href="assets/favicon.svg">
+<link rel="apple-touch-icon" href="assets/favicon.svg">
 <link rel="stylesheet" href="dist/styles/css/styles.css">
 </head>
 <body>

@@ -10,7 +10,11 @@ function closeMoreMenu() { _moreMenu?.classList.remove('open'); }
 _moreBtn?.addEventListener('click', e => { e.stopPropagation(); _moreMenu?.classList.toggle('open'); });
 document.addEventListener('click', e => { if (!e.target.closest('.hdr-more')) closeMoreMenu(); });
 
-function switchTab(tab) {
+const VALID_TABS = new Set(['sites', 'tasks', 'settings', 'archive']);
+
+function switchTab(tab, pushHash = true) {
+  if (!VALID_TABS.has(tab)) tab = 'sites';
+  if (pushHash) location.hash = tab;
   $$('.nav-btn[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab===tab));
   $$('.hdr-more-item[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab===tab));
   $('#panel-sites').classList.toggle('hidden', tab!=='sites');
@@ -21,6 +25,14 @@ function switchTab(tab) {
   if (tab==='tasks' && S.project) renderKanban();
   if (tab==='settings') loadSettingsDefaults();
 }
+
+function _tabFromHash() {
+  const h = location.hash.replace('#', '');
+  return VALID_TABS.has(h) ? h : 'sites';
+}
+
+window.addEventListener('hashchange', () => switchTab(_tabFromHash(), false));
+switchTab(_tabFromHash(), false);
 
 async function loadSettingsDefaults() {
   const r = await api('get_settings', null, 'GET');
@@ -163,58 +175,58 @@ function applyFilters() {
 }
 
 /* ═══════════════════════════════════════════════════════
-   OPEN DROPDOWN
+   HOVER MENUS — Open browser + IDE
 ═══════════════════════════════════════════════════════ */
+let _hmTimer = null;
+
+function _openHoverMenu(wrap) {
+  clearTimeout(_hmTimer);
+  $$('.open-menu.open, .ide-menu.open').forEach(m => m.classList.remove('open'));
+  const menu = wrap.querySelector('.open-menu, .ide-menu');
+  if (!menu) return;
+  const btn  = wrap.querySelector('button');
+  const rect = btn.getBoundingClientRect();
+  const menuW = menu.offsetWidth || 180;
+  let left = rect.left;
+  if (left + menuW > window.innerWidth - 8) left = window.innerWidth - menuW - 8;
+  menu.style.top  = (rect.bottom + 4) + 'px';
+  menu.style.left = left + 'px';
+  menu.classList.add('open');
+}
+
+function _closeHoverMenu(wrap) {
+  _hmTimer = setTimeout(() => {
+    wrap.querySelector('.open-menu, .ide-menu')?.classList.remove('open');
+  }, 120);
+}
+
+$$('.open-wrap, .ide-wrap').forEach(wrap => {
+  wrap.addEventListener('mouseenter', () => _openHoverMenu(wrap));
+  wrap.addEventListener('mouseleave', () => _closeHoverMenu(wrap));
+});
+
+// Close all on outside click / scroll
 document.addEventListener('click', e => {
-  const trigger = e.target.closest('.js-open-trigger');
-  if (trigger) {
-    e.stopPropagation();
-    const wrap = trigger.closest('.open-wrap');
-    const menu = wrap.querySelector('.open-menu');
-    const isOpen = menu.classList.contains('open');
-    $$('.open-menu.open').forEach(m => m.classList.remove('open'));
-    if (!isOpen) {
-      const rect = trigger.getBoundingClientRect();
-      const menuW = 190;
-      let left = rect.left;
-      if (left + menuW > window.innerWidth - 8) left = window.innerWidth - menuW - 8;
-      menu.style.top  = (rect.bottom + 5) + 'px';
-      menu.style.left = left + 'px';
-      menu.classList.add('open');
-    }
-    return;
+  if (!e.target.closest('.open-wrap') && !e.target.closest('.ide-wrap')) {
+    $$('.open-menu.open, .ide-menu.open').forEach(m => m.classList.remove('open'));
   }
-  // Close on outside click
-  if (!e.target.closest('.open-menu')) {
-    $$('.open-menu.open').forEach(m => m.classList.remove('open'));
-  }
-  // Handle item clicks
+});
+
+// Handle browser item clicks
+document.addEventListener('click', e => {
   const item = e.target.closest('.om-item');
   if (!item) return;
   const url = item.dataset.url;
   const app = item.dataset.app;
   if (!url) return;
   $$('.open-menu.open').forEach(m => m.classList.remove('open'));
-  if (app==='tab') {
+  if (app === 'tab') {
     window.open(url, '_blank', 'noreferrer');
   } else {
     api('open_browser', { url, app }, 'POST').then(r => {
       if (!r.ok) toast(`Could not open ${app}: ${r.error}`, 'err');
     });
   }
-});
-
-/* ═══════════════════════════════════════════════════════
-   IDE MODAL
-═══════════════════════════════════════════════════════ */
-document.addEventListener('click', e => {
-  const btn = e.target.closest('.js-ide');
-  if (!btn) return;
-  $('#ide-path').textContent       = btn.dataset.path;
-  $('#ide-phpstorm').href          = btn.dataset.phpstorm;
-  $('#ide-vscode').href            = btn.dataset.vscode;
-  $('#ide-cursor').href            = btn.dataset.cursor;
-  openModal('modal-ide');
 });
 
 /* ═══════════════════════════════════════════════════════
@@ -311,6 +323,7 @@ $('#log-clear').addEventListener('click', async () => {
     $('#log-meta').innerHTML = '';
     $('#log-area').innerHTML = '<div class="log-empty">Log cleared.</div>';
     toast('Debug log cleared');
+    document.querySelector(`.sc[data-site="${CSS.escape(S.logSite)}"] .log-sz`)?.remove();
   }
 });
 
@@ -488,6 +501,40 @@ document.addEventListener('click', async e => {
     setTimeout(() => location.reload(), 800);
   } else {
     toast(r.error || 'Unarchive failed', 'err');
+    btn.disabled = false;
+  }
+});
+
+document.addEventListener('click', async e => {
+  const btn = e.target.closest('.js-ssl');
+  if (!btn) return;
+  const site   = btn.dataset.site;
+  const secure = btn.dataset.secure !== 'true';
+  btn.disabled = true;
+
+  const title = (secure ? 'Enable SSL — ' : 'Disable SSL — ') + site;
+  const log   = actLog.action(title);
+
+  let sudoPass = '';
+  const sudoCheck = await api('check_sudo', {});
+  if (sudoCheck.needs_password) {
+    sudoPass = await log.passwordPrompt('Administrator password required for valet secure');
+  }
+
+  const r = await api('toggle_ssl', { name: site, secure, sudo_pass: sudoPass }, 'POST');
+  const cmd = (secure ? 'valet secure ' : 'valet unsecure ') + site;
+  if (r.ok) {
+    log.step(secure ? 'valet secure' : 'valet unsecure', true, cmd, r.output || '');
+    log.done(true, secure ? `SSL enabled for ${site}` : `SSL disabled for ${site}`);
+    setTimeout(() => location.reload(), 900);
+  } else if (r.error === 'Failed to fetch') {
+    // valet secure restarts PHP-FPM/nginx mid-request — connection drop = SSL applied successfully
+    log.step(secure ? 'valet secure' : 'valet unsecure', true, cmd, 'Service restarted — reloading…');
+    log.done(true, secure ? `SSL enabled for ${site}` : `SSL disabled for ${site}`);
+    setTimeout(() => location.reload(), 3000);
+  } else {
+    log.step(r.error || 'SSL toggle failed', false, cmd, r.error || '');
+    log.done(false, r.error || 'SSL toggle failed');
     btn.disabled = false;
   }
 });
