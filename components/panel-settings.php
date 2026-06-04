@@ -254,6 +254,11 @@
             <input type="password" id="gs-db-pass" class="finput settings-input" placeholder="(empty)" autocomplete="new-password">
           </div>
 
+          <div class="settings-row">
+            <div class="settings-row-label">phpMyAdmin URL</div>
+            <input type="text" id="gs-pma-url" class="finput settings-input" placeholder="http://phpmyadmin.test" autocomplete="off">
+          </div>
+
           <div class="settings-save-row">
             <button class="btn btn-c" id="gs-db-save">Save DB Config</button>
           </div>

@@ -10,6 +10,8 @@ $archived         = $db->getArchived();
 $active_entries   = array_values(array_filter($entries, fn($e) => !in_array($e['name'], $archived)));
 $archived_entries = array_values(array_filter($entries, fn($e) =>  in_array($e['name'], $archived)));
 $installed        = SiteScanner::detectInstalledApps();
+$notes            = $db->getNotes();
+$pma_url          = $db->getSettings()['db_config']['pma_url'] ?? 'http://phpmyadmin.test';
 ?>
 <!doctype html>
 <html lang="en" data-theme="dark">

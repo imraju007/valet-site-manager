@@ -108,6 +108,92 @@
   </div>
 </div>
 
+<!-- ── Site Info Modal ────────────────────────────────────────────────── -->
+<div class="modal" id="modal-site-info">
+  <div class="mbox" style="max-width:580px">
+    <div class="mhdr">
+      <span class="mtitle" id="si-title">Site Info</span>
+      <button class="mclose js-mclose"><svg><use href="#i-x"/></svg></button>
+    </div>
+    <div class="mbody" id="si-body">
+      <div style="display:flex;align-items:center;gap:10px;color:var(--txt);font-size:13px">
+        <span class="spin"></span> Loading…
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Snapshots Modal ────────────────────────────────────────────────── -->
+<div class="modal" id="modal-snapshots">
+  <div class="mbox" style="max-width:500px">
+    <div class="mhdr">
+      <span class="mtitle" id="snap-title">DB Snapshots</span>
+      <button class="mclose js-mclose"><svg><use href="#i-x"/></svg></button>
+    </div>
+    <div class="mbody">
+      <div class="snap-create">
+        <input type="text" id="snap-name" class="finput" placeholder="Snapshot name (optional)"
+          style="font-family:'JetBrains Mono',monospace;font-size:11px">
+        <button class="btn btn-c" id="snap-create-btn"><svg><use href="#i-snapshot"/></svg> Create</button>
+      </div>
+      <div id="snap-list">
+        <div style="display:flex;align-items:center;gap:10px;color:var(--txt);font-size:13px">
+          <span class="spin"></span> Loading…
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Clone Site Modal ───────────────────────────────────────────────── -->
+<div class="modal" id="modal-clone">
+  <div class="mbox" style="max-width:440px">
+    <div class="mhdr">
+      <span class="mtitle" id="clone-title">Clone Site</span>
+      <button class="mclose js-mclose"><svg><use href="#i-x"/></svg></button>
+    </div>
+    <div class="mbody">
+      <p style="font-size:12px;color:var(--txtm);margin-bottom:16px">
+        Copies all files and the database, then runs search-replace on URLs.
+      </p>
+      <div class="fgrp">
+        <label class="flabel" for="clone-name">New Site Name</label>
+        <input type="text" id="clone-name" class="finput"
+          placeholder="my-project-copy"
+          style="font-family:'JetBrains Mono',monospace"
+          autocomplete="off">
+        <div style="font-size:11px;color:var(--txtm);margin-top:4px">
+          Available at <span id="clone-preview" style="color:var(--cyan)">sitename.test</span>
+        </div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn js-mclose">Cancel</button>
+      <button class="btn btn-c" id="clone-start"><svg><use href="#i-copy"/></svg> Clone</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Site Note Modal ────────────────────────────────────────────────── -->
+<div class="modal" id="modal-note">
+  <div class="mbox" style="max-width:440px">
+    <div class="mhdr">
+      <span class="mtitle" id="note-title">Site Note</span>
+      <button class="mclose js-mclose"><svg><use href="#i-x"/></svg></button>
+    </div>
+    <div class="mbody">
+      <textarea id="note-text" class="finput" rows="6"
+        placeholder="Add a note about this site…"
+        style="resize:vertical;min-height:100px;line-height:1.6"></textarea>
+    </div>
+    <div class="mfoot">
+      <button class="btn js-mclose">Cancel</button>
+      <button class="btn btn-r" id="note-clear">Clear</button>
+      <button class="btn btn-c" id="note-save">Save Note</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── Create Site Modal ──────────────────────────────────────────────── -->
 <div class="modal" id="modal-create-site">
   <div class="mbox" style="max-width:560px">

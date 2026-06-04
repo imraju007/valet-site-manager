@@ -80,6 +80,19 @@ switch ($action) {
         ok();
     }
 
+    // ── Batch log size poll ───────────────────────────────────────────────
+    case 'log_sizes': {
+        $names = array_filter(array_map('trim', explode(',', $_GET['sites'] ?? '')));
+        $sizes = [];
+        foreach ($names as $name) {
+            $path = SiteScanner::sitePath($name, $root);
+            if (!$path) continue;
+            $log = $path . '/wp-content/debug.log';
+            $sizes[$name] = file_exists($log) ? (int)filesize($log) : 0;
+        }
+        ok(['sizes' => $sizes]);
+    }
+
     // ── Debug toggle ─────────────────────────────────────────────────────
     case 'debug_status': {
         $path = SiteScanner::sitePath($_GET['site'] ?? '', $root);
@@ -422,6 +435,264 @@ switch ($action) {
         if ($archive) $db->archiveSite($name);
         else          $db->unarchiveSite($name);
         ok();
+    }
+
+    // ── Site Notes ────────────────────────────────────────────────────────
+    case 'save_note': {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') fail('POST required');
+        $site = preg_replace('/[^a-z0-9_-]/i', '', $body['site'] ?? '');
+        if ($site === '') fail('Site required');
+        $text = substr(trim($body['text'] ?? ''), 0, 2000);
+        $db->saveNote($site, $text);
+        ok(['text' => $text]);
+    }
+
+    case 'get_note': {
+        $site = preg_replace('/[^a-z0-9_-]/i', '', $_GET['site'] ?? '');
+        if ($site === '') fail('Site required');
+        ok(['text' => $db->getNote($site)]);
+    }
+
+    // ── Site Info ─────────────────────────────────────────────────────────
+    case 'site_info': {
+        $path = SiteScanner::sitePath($_GET['site'] ?? '', $root);
+        if (!$path) fail('Invalid site', 404);
+
+        [$wpVer]  = $platform->exec('wp core version', $path);
+        [$phpVer] = $platform->exec('php -r "echo PHP_VERSION;"', $path);
+        [$dbSize] = $platform->exec('wp db size --size_format=mb', $path);
+        [$theme]  = $platform->exec('wp theme list --status=active --field=name', $path);
+        [$blog]   = $platform->exec('wp option get blogname', $path);
+        [$plOut]  = $platform->exec('wp plugin list --status=active --field=name', $path);
+
+        $flags = [];
+        foreach (['WP_DEBUG','WP_DEBUG_LOG','SCRIPT_DEBUG','SAVEQUERIES','DISALLOW_FILE_EDIT','WP_POST_REVISIONS'] as $flag) {
+            [$val, $c] = $platform->exec("wp config get {$flag}", $path);
+            $val = trim($val);
+            if ($c !== 0) $flags[$flag] = null;
+            elseif (in_array(strtolower($val), ['true','1'], true)) $flags[$flag] = true;
+            elseif (in_array(strtolower($val), ['false','0'], true)) $flags[$flag] = false;
+            else $flags[$flag] = $val;
+        }
+
+        ok([
+            'wp_version'  => trim($wpVer),
+            'php_version' => trim($phpVer),
+            'db_size_mb'  => trim($dbSize),
+            'theme'       => trim($theme),
+            'blogname'    => trim($blog),
+            'plugins'     => array_values(array_filter(explode("\n", trim($plOut)))),
+            'flags'       => $flags,
+        ]);
+    }
+
+    case 'set_config_flag': {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') fail('POST required');
+        $path = SiteScanner::sitePath($body['site'] ?? '', $root);
+        if (!$path) fail('Invalid site', 404);
+        $flag  = preg_replace('/[^A-Z_]/', '', strtoupper($body['flag'] ?? ''));
+        $value = $body['value'] ?? null;
+        if ($flag === '') fail('Invalid flag');
+
+        $allowed = ['WP_DEBUG','WP_DEBUG_LOG','SCRIPT_DEBUG','SAVEQUERIES','DISALLOW_FILE_EDIT','WP_POST_REVISIONS'];
+        if (!in_array($flag, $allowed, true)) fail('Flag not allowed');
+
+        if (is_bool($value) || in_array($value, [true, false, 'true', 'false', 1, 0], true)) {
+            $raw  = (filter_var($value, FILTER_VALIDATE_BOOLEAN)) ? 'true' : 'false';
+            $cmd  = "wp config set {$flag} {$raw} --raw";
+        } else {
+            $cmd  = 'wp config set ' . $flag . ' ' . escapeshellarg((string)$value);
+        }
+        [$out, $code] = $platform->exec($cmd, $path);
+        if ($code !== 0) fail(trim($out) ?: 'Failed to set flag');
+        ok();
+    }
+
+    // ── PHP Version ───────────────────────────────────────────────────────
+    case 'php_version': {
+        $path = SiteScanner::sitePath($_GET['site'] ?? '', $root);
+        if (!$path) fail('Invalid site', 404);
+        [$ver] = $platform->exec('php -r "echo PHP_MAJOR_VERSION.\'.\'.PHP_MINOR_VERSION;"', $path);
+        ok(['version' => trim($ver)]);
+    }
+
+    case 'available_php': {
+        [$list] = $platform->exec('ls /opt/homebrew/Cellar/ 2>/dev/null | grep -E "^php(@[0-9.]+)?$"', APP_DIR);
+        $versions = [];
+        foreach (array_filter(explode("\n", trim($list))) as $item) {
+            $versions[] = preg_replace('/^php@?/', '', trim($item)) ?: 'latest';
+        }
+        sort($versions);
+        ok(['versions' => $versions]);
+    }
+
+    case 'set_php_version': {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') fail('POST required');
+        $site = trim($body['site'] ?? '');
+        $ver  = preg_replace('/[^0-9.]/', '', $body['version'] ?? '');
+        if ($site === '' || $ver === '') fail('Invalid payload');
+        $cmd = $platform->valetBin() . ' isolate php@' . $ver . ' --site=' . escapeshellarg($site);
+        [$out, $code] = $platform->exec($cmd, APP_DIR);
+        if ($code !== 0) fail(trim($out) ?: 'Failed to set PHP version');
+        ok(['version' => $ver]);
+    }
+
+    // ── DB Snapshots ──────────────────────────────────────────────────────
+    case 'list_snapshots': {
+        $site = preg_replace('/[^a-z0-9_-]/i', '', $_GET['site'] ?? '');
+        if ($site === '') fail('Site required');
+        $snapDir = APP_DIR . '/Storage/snapshots/' . $site;
+        $snaps   = [];
+        if (is_dir($snapDir)) {
+            foreach (glob($snapDir . '/*.sql') ?: [] as $f) {
+                $snaps[] = [
+                    'name'    => basename($f, '.sql'),
+                    'size'    => filesize($f),
+                    'created' => filemtime($f),
+                ];
+            }
+            usort($snaps, fn($a, $b) => $b['created'] <=> $a['created']);
+        }
+        ok(['snapshots' => $snaps]);
+    }
+
+    case 'create_snapshot': {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') fail('POST required');
+        $path = SiteScanner::sitePath($body['site'] ?? '', $root);
+        if (!$path) fail('Invalid site', 404);
+        $site    = basename($path);
+        $label   = preg_replace('/[^a-z0-9_-]/i', '-', trim($body['name'] ?? ''));
+        if ($label === '') $label = 'snap-' . date('YmdHis');
+        $snapDir = APP_DIR . '/Storage/snapshots/' . $site;
+        if (!is_dir($snapDir)) mkdir($snapDir, 0755, true);
+        $file    = $snapDir . '/' . $label . '.sql';
+        $cmd     = 'wp db export ' . escapeshellarg($file) . ' --add-drop-table';
+        [$out, $code] = $platform->exec($cmd, $path);
+        if ($code !== 0) fail(trim($out) ?: 'Export failed');
+        ok(['name' => $label, 'size' => filesize($file), 'created' => filemtime($file)]);
+    }
+
+    case 'restore_snapshot': {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') fail('POST required');
+        $path = SiteScanner::sitePath($body['site'] ?? '', $root);
+        if (!$path) fail('Invalid site', 404);
+        $site    = basename($path);
+        $name    = preg_replace('/[^a-z0-9_-]/i', '-', trim($body['name'] ?? ''));
+        $file    = APP_DIR . '/Storage/snapshots/' . $site . '/' . $name . '.sql';
+        if (!file_exists($file)) fail('Snapshot not found', 404);
+        $cmd = 'wp db import ' . escapeshellarg($file);
+        [$out, $code] = $platform->exec($cmd, $path);
+        if ($code !== 0) fail(trim($out) ?: 'Import failed');
+        ok();
+    }
+
+    case 'delete_snapshot': {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') fail('POST required');
+        $site = preg_replace('/[^a-z0-9_-]/i', '', $body['site'] ?? '');
+        $name = preg_replace('/[^a-z0-9_-]/i', '-', trim($body['name'] ?? ''));
+        if ($site === '' || $name === '') fail('Invalid payload');
+        $file = APP_DIR . '/Storage/snapshots/' . $site . '/' . $name . '.sql';
+        if (file_exists($file)) unlink($file);
+        ok();
+    }
+
+    // ── Clone Site ────────────────────────────────────────────────────────
+    case 'clone_site': {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') fail('POST required');
+        $srcPath = SiteScanner::sitePath($body['source'] ?? '', $root);
+        if (!$srcPath) fail('Source site not found', 404);
+
+        $newName = preg_replace('/[^a-z0-9-]/', '', strtolower($body['name'] ?? ''));
+        if ($newName === '' || strlen($newName) > 60) fail('Invalid site name');
+
+        $parentDir = realpath(dirname($srcPath));
+        $dstPath   = $parentDir . DIRECTORY_SEPARATOR . $newName;
+        if (is_dir($dstPath)) fail('A site with that name already exists', 409);
+
+        $sudoPass = trim($body['sudo_pass'] ?? '');
+        $srcName  = basename($srcPath);
+        $srcUrl   = 'http://' . $srcName . '.test';
+        $dstUrl   = 'http://' . $newName . '.test';
+
+        $steps = [];
+        $step  = function(string $label, bool $ok, string $cmd = '', string $out = '') use (&$steps): void {
+            $steps[] = ['label' => $label, 'ok' => $ok, 'cmd' => $cmd, 'output' => trim($out)];
+        };
+
+        // Copy files
+        $cloneDir = function(string $src, string $dst) use (&$cloneDir): void {
+            if (!is_dir($dst)) mkdir($dst, 0755, true);
+            $items = array_diff(scandir($src) ?: [], ['.', '..']);
+            foreach ($items as $item) {
+                $s = $src . DIRECTORY_SEPARATOR . $item;
+                $d = $dst . DIRECTORY_SEPARATOR . $item;
+                if (is_dir($s)) $cloneDir($s, $d);
+                else @copy($s, $d);
+            }
+        };
+        $cloneDir($srcPath, $dstPath);
+        $step('Copy files', is_dir($dstPath), "cp -r {$srcPath} {$dstPath}");
+
+        // Update wp-config.php DB name
+        $dbName = str_replace('-', '_', $newName);
+        $wpConfig = $dstPath . '/wp-config.php';
+        if (file_exists($wpConfig)) {
+            $cfg = file_get_contents($wpConfig);
+            $cfg = preg_replace(
+                "/define\s*\(\s*'DB_NAME'\s*,\s*'[^']+'\s*\)/",
+                "define( 'DB_NAME', '{$dbName}' )",
+                $cfg
+            );
+            file_put_contents($wpConfig, $cfg);
+            $step('Update wp-config DB_NAME', true, "sed DB_NAME → {$dbName}");
+        }
+
+        // Create and import DB
+        $sDb    = $db->getSettings();
+        $dc     = $sDb['db_config'] ?? [];
+        $dbHost = trim($dc['host'] ?? '') ?: '127.0.0.1';
+        $dbUser = trim($dc['user'] ?? '') ?: 'root';
+        $dbPass = trim($dc['password'] ?? '');
+
+        $tmpDump = sys_get_temp_dir() . '/vsm_clone_' . $newName . '.sql';
+        $expCmd  = 'wp db export ' . escapeshellarg($tmpDump) . ' --add-drop-table';
+        [$out, $code] = $platform->exec($expCmd, $srcPath);
+        $step('Export source DB', $code === 0, $expCmd, $out);
+        if ($code !== 0) ok(['ok' => false, 'error' => 'DB export failed', 'steps' => $steps]);
+
+        $passArg = $dbPass !== '' ? '-p' . escapeshellarg($dbPass) : '';
+        $createCmd = sprintf('mysql -h%s -u%s %s -e %s',
+            escapeshellarg($dbHost), escapeshellarg($dbUser), $passArg,
+            escapeshellarg("CREATE DATABASE IF NOT EXISTS `{$dbName}`")
+        );
+        [$out, $code] = $platform->exec($createCmd, APP_DIR);
+        $step('Create target DB', $code === 0, "mysql … CREATE DATABASE {$dbName}", $out);
+        if ($code !== 0) ok(['ok' => false, 'error' => 'DB create failed', 'steps' => $steps]);
+
+        $impCmd = 'wp db import ' . escapeshellarg($tmpDump);
+        [$out, $code] = $platform->exec($impCmd, $dstPath);
+        $step('Import DB', $code === 0, $impCmd, $out);
+        @unlink($tmpDump);
+        if ($code !== 0) ok(['ok' => false, 'error' => 'DB import failed', 'steps' => $steps]);
+
+        // Search-replace URLs
+        $srCmd = "wp search-replace " . escapeshellarg($srcUrl) . " " . escapeshellarg($dstUrl);
+        [$out, $code] = $platform->exec($srCmd, $dstPath);
+        $step('Search-replace URLs', $code === 0, $srCmd, $out);
+
+        // Valet link
+        $valetCfg    = json_decode(@file_get_contents($platform->valetConfigFile()) ?: '{}', true);
+        $parkedPaths = array_filter(array_map('realpath', $valetCfg['paths'] ?? []));
+        $isParked    = in_array(realpath($parentDir), $parkedPaths, true);
+        if ($isParked) {
+            $step('Link', true, 'skipped — parent directory is parked', '');
+        } else {
+            $vlinkCmd = $platform->valetBin() . ' link ' . escapeshellarg($newName);
+            [$out, $code] = $platform->exec($vlinkCmd, $dstPath, $sudoPass);
+            $step('Link', $code === 0, $vlinkCmd, trim($out));
+        }
+
+        ok(['ok' => true, 'steps' => $steps, 'url' => $dstUrl]);
     }
 
     default:

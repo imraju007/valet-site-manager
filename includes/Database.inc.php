@@ -62,7 +62,7 @@ class Database
         return [
             'appearance'       => ['action_btn' => [], 'presets' => []],
             'new_site_default' => ['plugins' => [], 'themes' => [], 'folder_structure' => (object)[], 'wp_parent_dir' => '', 'static_parent_dir' => ''],
-            'db_config'        => ['host' => '', 'user' => '', 'password' => ''],
+            'db_config'        => ['host' => '', 'user' => '', 'password' => '', 'pma_url' => ''],
             'wp_admin_config'  => ['user' => '', 'password' => '', 'email' => ''],
         ];
     }
@@ -237,6 +237,7 @@ class Database
             'host'     => trim($data['host']     ?? ''),
             'user'     => trim($data['user']     ?? ''),
             'password' => trim($data['password'] ?? ''),
+            'pma_url'  => trim($data['pma_url']  ?? ''),
         ];
     }
 
@@ -248,6 +249,27 @@ class Database
         if (isset($data['presets']) && is_array($data['presets'])) {
             $this->data['__settings__']['appearance']['presets'] = $data['presets'];
         }
+    }
+
+    // ── Notes ─────────────────────────────────────────────────────────────
+
+    public function getNote(string $site): string
+    {
+        return $this->data()['__notes__'][$site] ?? '';
+    }
+
+    public function saveNote(string $site, string $text): void
+    {
+        $this->data();
+        $this->data['__notes__'] ??= [];
+        if ($text === '') unset($this->data['__notes__'][$site]);
+        else $this->data['__notes__'][$site] = $text;
+        $this->write();
+    }
+
+    public function getNotes(): array
+    {
+        return $this->data()['__notes__'] ?? [];
     }
 
     public function getArchived(): array

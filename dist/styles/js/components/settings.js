@@ -427,6 +427,7 @@ function initSettingsPanel() {
         host:     $('#gs-db-host').value.trim(),
         user:     $('#gs-db-user').value.trim(),
         password: $('#gs-db-pass').value.trim(),
+        pma_url:  $('#gs-pma-url')?.value.trim() || '',
       },
     }, 'POST');
     if (r.ok) toast('DB config saved');
